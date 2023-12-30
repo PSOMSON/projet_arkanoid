@@ -57,4 +57,14 @@ module Flux : Intf with type 'a t = 'a flux = struct
   (* implantation rapide mais inefficace de map *)
   let map f i = apply (constant f) i
   let map2 f i1 i2 = apply (apply (constant f) i1) i2
+
+  let rec unless : 'a t -> ('a -> bool) -> ('a -> 'a t) -> 'a t
+  = fun f c g -> 
+    Tick (lazy (match uncons f with
+      | None        -> None
+      | Some (t, q) -> 
+        if c t then
+          uncons (g t)
+        else
+          Some(t, unless q c g) ))
 end
