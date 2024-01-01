@@ -1,3 +1,5 @@
+open Briques
+
 type vector2 = int*int (*seras implémenté plus en détail plus tard *)
 
 type 'a feuille = {position : vector2; value : 'a}
@@ -61,9 +63,48 @@ let rec insert : 'a qtree -> 'a feuille-> 'a qtree =
       value selon sa position :*)
       insert_intermediaire arbre value
 
-let rec remove arbre value = failwith "TODO"
 
-let rec isOccupied arbre pos = failwith "TODO"
+(* ce remove est assez rudimentaire, faudrais le rendre plus opti (supprimer les branches mortes..*)
+let rec remove arbre pos = 
+  match arbre.tree with 
+    | Empty -> {tree=Empty;size=arbre.size}
+    | Leaf v -> if v.position = pos then {tree=Empty;size=arbre.size} else {tree=Leaf v;size=arbre.size}
+    | Node (a,b,c,d) -> 
+      let (x,y) = pos in
+      let (w,h) = arbre.size in
+      if x < w/2 then 
+        if y < h/2 then 
+          {tree=Node ((remove a pos), b, c, d);size=arbre.size}
+        else 
+          {tree=Node (a, b, (remove c pos), d); size=arbre.size}
+        else 
+        if y < h/2 then 
+          {tree=Node (a, (remove b pos), c, d); size=arbre.size}
+        else 
+          {tree=Node (a, b, c, (remove d pos)); size=arbre.size}
 
-let rec colide arbre pos vit = failwith "TODO"
+let rec isOccupied arbre pos = 
+  match arbre.tree with 
+    | Empty -> None
+    | Leaf v -> if (v.position == pos) then Some v.value else None
+    | Node (a,b,c,d) -> 
+      let (x,y) = pos in
+      let (w,h) = arbre.size in
+      if x < w/2 then 
+        if y < h/2 then 
+          isOccupied a pos
+        else 
+          isOccupied c pos
+        else 
+        if y < h/2 then 
+          isOccupied b pos
+        else 
+          isOccupied d pos
+
+let rec colide arbre pos vit dt = 
+  let (x,y) = ((fst pos) + (fst vit)*dt, (snd pos) + (snd vit)*dt) in
+  match isOccupied arbre (x,y) with 
+    | None -> (x,y)
+    | Some v -> failwith "TODO"
+
 

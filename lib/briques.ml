@@ -3,6 +3,9 @@
 (*Etat Solide : la brique peut être cassée mais ne l'a pas encore été
    Etat Incassable : la brique ne peut pas être cassée
    Etat Invisible : la brique a été solide et a été cassée/n'est plus un obstacle pour la balle*)
+
+(*note : on stoque la position de chaque brique comme étant la position de 
+   leur coin inférieur gauche !*)
 type etat = Solide | Incassable | Invisible
 
 module type Briques =
