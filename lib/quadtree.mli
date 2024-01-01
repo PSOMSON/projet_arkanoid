@@ -14,13 +14,13 @@ type 'a tree =
         | Empty
         | Leaf of 'a feuille
         | Node of 'a qtree * 'a qtree * 'a qtree * 'a qtree
-and 'a qtree = {tree : 'a tree; size : int*int}
+and 'a qtree = {tree : 'a tree; size : int*int; resol : int*int}
 
   (*l'arbre est-il vide ?*)
 val empty : 'a qtree -> bool
 
   (*création de l'arbre à partir de la taille de la fenêtre*)
-val create : int -> int -> 'a qtree
+val create : int -> int -> int*int -> 'a qtree
 (*permet d'insérer un objet 'a à une position donnée par vector2*)
 val insert : 'a qtree -> 'a feuille-> 'a qtree
 val remove : 'a qtree -> vector2 -> 'a qtree
@@ -29,6 +29,7 @@ val isOccupied : 'a qtree -> vector2 -> 'a option
   (*détection de collision entre un objet de vitesse et de position donnée
      ça renvoie le nouveau vecteur vitesse de l'objet
      si l'objet ne collisionne pas, le vecteur vitesse est inchangé*)
-val colide : 'a qtree -> vector2 -> vector2 -> float -> vector2
+  (*de plus, on renvoie le qtree à jour*)
+val colide : 'a qtree -> float*float -> float*float -> float -> 'a qtree * (float*float)
 
 
