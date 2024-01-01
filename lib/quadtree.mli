@@ -5,22 +5,25 @@
    jusqu'à arriver à des zones élémentaires de taille T : int*int pixels*)
 
 type vector2 = int*int (*seras implémenté plus en détail plus tard *)
+type 'a feuille = {position : vector2; value : 'a}
 
     (*un arbre est soit vide, soit une feuille, soit un noeud*)
-type 'a tree = 
-    | Empty
-    | Leaf of 'a
-    | Node of 'a tree * 'a tree * 'a tree * 'a tree
 
-type 'a qtree = {tree : 'a tree; size : int*int}
+    
+type 'a tree = 
+        | Empty
+        | Leaf of 'a feuille
+        | Node of 'a qtree * 'a qtree * 'a qtree * 'a qtree
+and 'a qtree = {tree : 'a tree; size : int*int}
 
   (*l'arbre est-il vide ?*)
 val empty : 'a qtree -> bool
 
   (*création de l'arbre à partir de la taille de la fenêtre*)
 val create : int -> int -> 'a qtree
-val insert : 'a qtree -> 'a -> 'a qtree
-val remove : 'a qtree -> 'a -> 'a qtree
+(*permet d'insérer un objet 'a à une position donnée par vector2*)
+val insert : 'a qtree -> 'a feuille-> 'a qtree
+val remove : 'a qtree -> vector2 -> 'a qtree
 val isOccupied : 'a qtree -> vector2 -> bool
 
   (*détection de collision entre un objet de vitesse et de position donnée
