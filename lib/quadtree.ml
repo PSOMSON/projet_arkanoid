@@ -119,6 +119,7 @@ let rec isOccupied arbre pos =
 let rec colide arbre pos vit dt = 
   (*on calcule la position future*)
   (* soucis ! on prend pas en compte la taille de la balle là -_-''*)
+  (*enfaite faut rechercher sur internet t'es débile céleste*)
   let (x,y) = ((fst pos) +. (fst vit)*.dt, (snd pos) +. (snd vit)*.dt) in
   match isOccupied arbre (int_of_float x,int_of_float y) with 
     | None -> (arbre, vit)
