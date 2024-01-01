@@ -117,11 +117,22 @@ let rec isOccupied arbre pos =
           isOccupied d pos
 
 let rec colide arbre pos vit dt = 
+  (*on calcule la position future*)
+  (* soucis ! on prend pas en compte la taille de la balle là -_-''*)
   let (x,y) = ((fst pos) +. (fst vit)*.dt, (snd pos) +. (snd vit)*.dt) in
   match isOccupied arbre (int_of_float x,int_of_float y) with 
     | None -> (arbre, vit)
-    | Some v -> failwith "colide : collision détectée !"
-      (*TODO : gérer l'incrément du score !, et suppression/décrément? de la brique touchée !*)
+    | Some v -> 
+      let (x_inter,y_inter) = (float_of_int (fst v.position), float_of_int (snd v.position)) in
+      let (x',y') = (x_inter -. x, y_inter -. y) in
+      let new_arbre = remove arbre v.position in
+      failwith "colide : TODO : gérer la collision !"
+        
+          
+      
+      
+      (*TODO : gérer l'incrément du score !, et suppression/décrément? de la brique touchée !
+         PS : la brique est stoquée dans v.value !*)
       
 
 
