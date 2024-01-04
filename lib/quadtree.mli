@@ -24,12 +24,12 @@ val create : int -> int -> int*int -> 'a qtree
 (*permet d'insérer un objet 'a à une position donnée par vector2*)
 val insert : 'a qtree -> 'a feuille-> 'a qtree
 val remove : 'a qtree -> vector2 -> 'a qtree
-val isOccupied : 'a qtree -> vector2 -> 'a option
+val isOccupied : 'a qtree -> vector2 -> 'a feuille option
 
   (*détection de collision entre un objet de vitesse et de position donnée
      ça renvoie le nouveau vecteur vitesse de l'objet
      si l'objet ne collisionne pas, le vecteur vitesse est inchangé*)
   (*de plus, on renvoie le qtree à jour*)
-val colide : 'a qtree -> float*float -> float*float -> float -> 'a qtree * (float*float)
+val colide : 'a qtree -> float*float -> float*float -> int -> 'a qtree * (float*float)* 'a feuille option 
 
 

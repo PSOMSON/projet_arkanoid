@@ -1,6 +1,3 @@
-open Briques
-
-
 type vector2 = int*int (*seras implémenté plus en détail plus tard *)
 
 type 'a feuille = {position : vector2; value : 'a}
@@ -101,7 +98,7 @@ let rec remove arbre pos =
 let rec isOccupied arbre pos = 
   match arbre.tree with 
     | Empty -> None
-    | Leaf v -> if (equals_with_resol (v.position) pos arbre.resol) then Some v.value else None
+    | Leaf v -> if (equals_with_resol (v.position) pos arbre.resol) then Some v else None
     | Node (a,b,c,d) -> 
       let (x,y) = pos in
       let (w,h) = arbre.size in
@@ -116,24 +113,50 @@ let rec isOccupied arbre pos =
         else 
           isOccupied d pos
 
-let rec colide arbre pos vit dt = 
-  (*on calcule la position future*)
-  (* soucis ! on prend pas en compte la taille de la balle là -_-''*)
-  (*enfaite faut rechercher sur internet t'es débile céleste*)
-  let (x,y) = ((fst pos) +. (fst vit)*.dt, (snd pos) +. (snd vit)*.dt) in
-  match isOccupied arbre (int_of_float x,int_of_float y) with 
-    | None -> (arbre, vit)
-    | Some v -> 
-      let (x_inter,y_inter) = (float_of_int (fst v.position), float_of_int (snd v.position)) in
-      let (x',y') = (x_inter -. x, y_inter -. y) in
-      let new_arbre = remove arbre v.position in
-      failwith "colide : TODO : gérer la collision !"
+let colide : 'a qtree -> float*float -> float*float -> int -> 'a qtree * (float*float)* 'a feuille option =
+  fun arbre pos vit taille_balle ->
+
+  let (x,y) = (int_of_float (fst pos), int_of_float (snd pos)) in
+  let (vx, vy) = vit in 
+  
+
+  let colid_inter arbre x y = 
+    let pos = (int_of_float x , int_of_float y) in
+    match isOccupied arbre pos with 
+      | None -> (arbre, false, None)
+      | Some v -> let new_arbre = (remove arbre v.position) in (new_arbre, true, Some v)          
         
-          
+  in 
+    (*soit la balle touche une balle à sa droite, à sa gauche, en haut ou en bas, ou en diagonal, dans un quel
+       cas,c'est dans la longueure de la vitesse*)
+
+    let (arbre_inter, did_colide,brique) = colid_inter arbre (float_of_int (x+taille_balle)) (float_of_int y)  in
+    if did_colide then (arbre_inter, (-. vx,vy), brique) else
       
+    let (arbre_inter, did_colide, brique) = colid_inter arbre (float_of_int (x-taille_balle)) (float_of_int y) in 
+    if did_colide then (arbre_inter, (-. vx,vy), brique) else 
+
+    let (arbre_inter, did_colide, brique) = colid_inter arbre (float_of_int x) (float_of_int (y+taille_balle)) in 
+    if did_colide then (arbre_inter, (vx, -. vy), brique) else 
+
+    let (arbre_inter, did_colide, brique) = colid_inter arbre (float_of_int x) (float_of_int (y-taille_balle)) in 
+    if did_colide then (arbre_inter, (vx, -. vy), brique) else 
+
+    (*on veux calculer la position de l'intersection entre le vecteur vitesse et le bout de la balle*)
+    (*d'abord on normalise le vecteur vitesse*)
+    let norme = sqrt ((vx *. vx) +. (vy *. vy)) in
+    let (vx', vy') = ((vx /. norme)*.(float_of_int taille_balle)  , (vy /. norme)*.(float_of_int taille_balle) ) in
+    (*on calcule la position de l'intersection*)
+    let (x', y') = ((float_of_int x) +. vx', (float_of_int y) +. vy') in
+    (*on regarde si il y a une brique à cette position*)
+
+    let (arbre_inter, did_colide, brique) = colid_inter arbre x' y' in 
+    (*dans ce cas là, on a rencontré un coin*)
+    if did_colide then (arbre_inter, (-. vx, -. vy), brique) else 
+
+    (arbre, vit, None)
+
       
-      (*TODO : gérer l'incrément du score !, et suppression/décrément? de la brique touchée !
-         PS : la brique est stoquée dans v.value !*)
       
 
 
