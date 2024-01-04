@@ -152,11 +152,7 @@ let colide : 'a qtree -> float*float -> float*float -> int -> 'a qtree * (float*
 
     let (arbre_inter, did_colide, brique) = colid_inter arbre x' y' in 
     (*dans ce cas là, on a rencontré un coin*)
-    if did_colide then (arbre_inter, (-. vx, -. vy), brique) else 
+    if did_colide then (arbre_inter, (-. vx, -. vy), brique) else (arbre, (vx,vy), None)
 
-    (arbre, vit, None)
-
-      
-      
 
 
