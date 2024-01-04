@@ -70,7 +70,7 @@ end
 
 (*Fonctions suivantes implémentées pour la 2d seulement*)
 
-let chevauchement_brique : Briques2d.brique -> float -> float -> float -> float -> Briques2d.p = fun brique xnew ynew haut larg ->
+let chevauchement_brique : Briques2d.brique -> float -> float -> float -> float -> bool = fun brique xnew ynew haut larg ->
    let xpos = Briques2d.getpos (Briques2d.getposition brique) in
    let xdim = Briques2d.getdim (Briques2d.getdimension brique) in
    let xbrique = List.hd xpos in
@@ -81,24 +81,17 @@ let chevauchement_brique : Briques2d.brique -> float -> float -> float -> float 
    let ybriqueop = ybrique +. hbrique in
    let xnewop = xnew +. larg in
    let ynewop = ynew +. haut in
-   let x = if xnewop < xbrique then xbrique -. xnewop 
-         else if xnew > xbriqueop then xbriqueop -. xnew  
-         else if xnewop = xbrique then -0.1 
-         else if xnew = xbriqueop then 0.1 
-         else 0.0 in
-   let y = if ynewop < ybrique then ybrique -. ynewop 
-         else if ynew > ybriqueop then ybriqueop -. ynew 
-         else if ynewop = ybrique then -0.1 
-         else if ynew = ybriqueop then 0.1 
-         else 0.0 in
-   Briques2d.createpos (x::y::[])
+   let plusx = xnew > xbriqueop in
+   let moinsx = xnewop < xbrique in
+   let plusy = ynew > ybriqueop in
+   let moinsy = ynewop < ybrique in
+   if plusx || moinsx || plusy || moinsy then false
+   else true
 
-let maj_position brique res = 
-   let x = List.hd brique in
-   let y = List.hd (List.tl brique) in
-   let xres = List.hd res in
-   let yres = List.hd (List.tl res) in
-   Briques2d.createpos (x +. xres :: y +. yres :: []) 
+let create_position bxmin bxmax bymin bymax h l = 
+   let x = Random.float (bxmax -. bxmin -. l) +. bxmin in
+   let y = Random.float (bymax -. bymin -. h) +. bymin in
+   Briques2d.createpos (x::y::[])
    
 let find_position bxmin bxmax bymin bymax h l liste = 
    let x = Random.float (bxmax -. bxmin -. l) +. bxmin in
@@ -107,22 +100,39 @@ let find_position bxmin bxmax bymin bymax h l liste =
    let rec aux : Briques2d.briques -> Briques2d.p -> Briques2d.p = fun lst pos ->
       match lst with
       |[] -> pos
-      |b::q -> let res = Briques2d.getpos (chevauchement_brique b x y h l) in
-         if res = 0.0::0.0::[] then aux q (Briques2d.createpos (res)) else aux liste (maj_position (Briques2d.getpos(pos)) res)
+      |b::q -> let x = List.hd (Briques2d.getpos pos) in
+         let y = List.hd (List.tl (Briques2d.getpos pos)) in
+         if (chevauchement_brique b x y h l) then aux liste (create_position bxmin bxmax bymin bymax h l)  else aux q pos
    in aux liste p
 
 (*On peut reprendre une autre implémentation d'une fenêtre pour indiquer la fenêtre où générer les briques (ie pas toute la fenêtre affichée) 
    plutôt que les quatre paramètres mais on n'a pas repris ce module encore je crois*)
 
 let genbriques n bxmin bxmax bymin bymax hmin hmax lmin lmax rptaillescore etatbrique = 
-   let rec aux : int -> Briques2d.briques -> Briques2d.briques = fun n liste ->
-      if n = 0 then [] else
-         let hauteur = Random.float (hmax -. hmin) +. hmin in
-         let largeur = Random.float (lmax -. lmin) +. lmin in
-         let dimension =  Briques2d.createdim (largeur::hauteur::[]) in
-         let etat = etatbrique in
-         let position = find_position bxmin bxmax bymin bymax hauteur largeur liste in
-         let score = rptaillescore*(int_of_float (hauteur*.largeur)) in
-         let brique = Briques2d.createbrique score etat position dimension in
-         brique::(aux (n-1) (brique::liste))
-   in aux n []
+   let check_param = hmin <= hmax && lmin <= lmax  && n >= 0 && (bxmax -. bxmin) >= lmin && (bymax -. bymin) >= hmin in
+      if not check_param then failwith "paramètres non valides" else
+         let rec aux : int -> Briques2d.briques -> Briques2d.briques = fun n liste ->
+            if n = 0 then [] else
+               let hauteur = Random.float (hmax -. hmin) +. hmin in
+               let largeur = Random.float (lmax -. lmin) +. lmin in
+               let dimension =  Briques2d.createdim (largeur::hauteur::[]) in
+               let etat = etatbrique in
+               let position = find_position bxmin bxmax bymin bymax hauteur largeur liste in
+               let score = rptaillescore*(int_of_float (hauteur*.largeur)) in
+               let brique = Briques2d.createbrique score etat position dimension in
+               brique::(aux (n-1) (brique::liste))
+         in aux n []
+
+let rec afficher_contenu_brique liste =
+   match liste with
+   |[] -> ()
+   |b::q -> Printf.printf "score : %d\n" (Briques2d.getscore b);
+      Printf.printf "etat : %b\n" (Briques2d.est_cassable b);
+      Printf.printf "position : %f %f\n" (List.hd (Briques2d.getpos (Briques2d.getposition b))) (List.hd (List.tl (Briques2d.getpos (Briques2d.getposition b))));
+      Printf.printf "dimension : %f %f\n" (List.hd (Briques2d.getdim (Briques2d.getdimension b))) (List.hd (List.tl (Briques2d.getdim (Briques2d.getdimension b))));
+      afficher_contenu_brique q
+
+let%test "test génération d'une brique" = 
+   let gen = genbriques 10 0. 100. 0. 100. 1. 10. 1. 10. 1 Cassable in
+   let _ = afficher_contenu_brique gen in
+   true
