@@ -1,4 +1,4 @@
-open Iterator
+(*open Iterator
 let g = -9.81
 
 
@@ -38,4 +38,4 @@ struct
       in unless (Flux.map2 (fun p v -> (p, v)) position speed) 
         (fun b -> (E.contact b)) 
         (fun (p, v) -> run (p, E.rebond p v))
-end
+end*)

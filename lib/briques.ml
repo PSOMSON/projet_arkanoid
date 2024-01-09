@@ -1,4 +1,4 @@
-
+open Quadtree
 
 (*Etat Solide : la brique peut être cassée mais ne l'a pas encore été
    Etat Incassable : la brique ne peut pas être cassée
@@ -118,16 +118,20 @@ let find_position bxmin bxmax bymin bymax h l liste =
    let genbriques n bxmin bxmax bymin bymax hmin hmax lmin lmax rptaillescore etatbrique =
       let quadtree = Quadtree.create (bxmax -. bxmin) (bymax -. bymin) (hmin, lmin) in
       let check_param = hmin <= hmax && lmin <= lmax  && n >= 1 && (bxmax -. bxmin) >= lmin && (bymax -. bymin) >= hmin in
+      
          if not check_param then failwith "paramètres non valides" else
             let rec insert_quadtree : Briques2d.briques -> Briques2d.brique qtree -> Briques2d.brique qtree = fun liste ptitree ->
                match liste with
+               
                |[] -> failwith "liste vide"
                |b::[] -> let feuille = {position = recreate_floats (Briques2d.getposition b); value = b} in
                   Quadtree.insert ptitree feuille
+
                |b::q -> let feuille = {position = recreate_floats (Briques2d.getposition b); value = b} in
                   Printf.printf "J'insère une brique\n";
                   let newquadtree = Quadtree.insert ptitree feuille in
                   insert_quadtree q newquadtree in
+
             let rec aux : int -> Briques2d.briques -> Briques2d.briques = fun n liste ->
                if n = 0 then [] else
                   let hauteur = Random.float (hmax -. hmin) +. hmin in
