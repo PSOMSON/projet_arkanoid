@@ -42,20 +42,20 @@ let rec insert : 'a qtree -> 'a feuille-> 'a qtree =
     fun arbre value ->
       match arbre.tree with
         | Node (a,b,c,d) ->
-          let (x,y) = value.position in
-          let (w,h) = arbre.size in
-          if x < w/.2. then 
-            if y < h/.2. then 
+          let (x,y) = (int_of_float (fst value.position), int_of_float (snd value.position)) in
+          let (w,h) = (int_of_float (fst arbre.size), int_of_float (snd arbre.size)) in
+          if x < w/2 then 
+            if y < h/2 then 
               (*cadran en haut à gauche*)
               {tree = Node ((insert a value), b, c, d); size= arbre.size; resol = arbre.resol}
             else 
               (*cadran en bas à gauche*)
               {tree = Node (a, b, (insert c value), d); size = arbre.size; resol = arbre.resol}
-            else 
-            if y < h/.2. then 
+          else 
+            if y < h/2 then 
               (*cadran en haut à droite*)
               {tree = Node (a, (insert b value), c, d); size = arbre.size; resol = arbre.resol}
-          else 
+            else 
               (*cadran en bas à droite*)
               {tree = Node (a, b, c, (insert d value)); size = arbre.size; resol = arbre.resol}
         | _ -> failwith "insert_intermediaire : arbre incompatible"
@@ -82,15 +82,15 @@ let rec remove arbre pos =
     | Empty -> {tree=Empty;size=arbre.size; resol = arbre.resol}
     | Leaf v -> if (equals_with_resol (v.position) pos arbre.resol) then {tree=Empty;size=arbre.size; resol = arbre.resol} else {tree=Leaf v;size=arbre.size; resol = arbre.resol}
     | Node (a,b,c,d) -> 
-      let (x,y) = pos in
-      let (w,h) = arbre.size in
-      if x < w/.2. then 
-        if y < h/.2. then 
+      let (x,y) = (int_of_float (fst pos), int_of_float (snd pos)) in
+          let (w,h) = (int_of_float (fst arbre.size), int_of_float (snd arbre.size)) in
+      if x < w/2 then 
+        if y < h/2 then 
           {tree=Node ((remove a pos), b, c, d);size=arbre.size; resol = arbre.resol}
         else 
           {tree=Node (a, b, (remove c pos), d); size=arbre.size; resol = arbre.resol}
-        else 
-        if y < h/.2. then 
+      else 
+        if y < h/2 then 
           {tree=Node (a, (remove b pos), c, d); size=arbre.size; resol = arbre.resol}
         else 
           {tree=Node (a, b, c, (remove d pos)); size=arbre.size; resol = arbre.resol}
