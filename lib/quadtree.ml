@@ -155,14 +155,28 @@ let colide : 'a qtree -> float*float -> float*float -> float -> 'a qtree * (floa
     if did_colide then (arbre_inter, (-. vx, -. vy), brique) else (arbre, (vx,vy), None)
 
 
+
+
+let rec gen_tabulation i = 
+  if i == 0 then "" else " "^(gen_tabulation (i-1))
+
 let print arbre = 
-  let rec print_inter arbre = 
+  let rec print_inter arbre prof= 
     match arbre.tree with 
       | Empty -> print_string "Empty"
       | Leaf v -> print_string "Leaf at" ;print_string (string_of_float (fst v.position)); print_string (string_of_float (snd v.position))
-      | Node (a,b,c,d) -> print_string "Node"
+      | Node (a,b,c,d) -> print_string "Node of size :"; print_string (string_of_float (fst a.size)); print_string (string_of_float (snd a.size)) ; 
+        print_string "\n====================\n";
+        print_string (gen_tabulation prof); print_inter a (prof+1);
+        print_string "\n";
+        print_string (gen_tabulation prof); print_inter b (prof+1);
+        print_string "\n";
+        print_string (gen_tabulation prof); print_inter c (prof+1);
+        print_string "\n"; 
+        print_string (gen_tabulation prof); print_inter d (prof+1);
+        print_string "\n====================\n";
   in
-  print_inter arbre
+  print_inter arbre 0
 
 
 
