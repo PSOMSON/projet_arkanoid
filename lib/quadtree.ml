@@ -27,10 +27,10 @@ let create2 width height res =
 
   (*permet de savoir si 2 positions seront égales dans la qtree *)
 let equals_with_resol posa posb resol = 
-  let (xa,ya) = posa in
-  let (xb,yb) = posb in
-  let (w,h) = resol in
-  (xa/.w) == (xb/.w) && (ya/.h) == (yb/.h)
+  let (xa,ya) = ( int_of_float (fst posa), int_of_float (snd posa) ) in
+  let (xb,yb) = ( int_of_float (fst posb), int_of_float (snd posb) ) in
+  let (w,h) = (int_of_float (fst resol), int_of_float (snd resol) ) in
+  (xa/w) == (xb/w) && (ya/h) == (yb/h)
 
   
 
