@@ -12,6 +12,7 @@ module type Intf = sig
   val uncons : 'a t -> ('a * 'a t) option
   val apply : ('a -> 'b) t -> 'a t -> 'b t
   val map2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
+  val unless : 'a t -> ('a -> bool) -> ('a -> 'a t) -> 'a t
 end
 
 type 'a flux = Tick of ('a * 'a flux) option Lazy.t
