@@ -44,20 +44,20 @@ let rec insert : 'a qtree -> 'a feuille-> 'a qtree =
         | Node (a,b,c,d) ->
           let (x,y) = (int_of_float (fst value.position), int_of_float (snd value.position)) in
           let (w,h) = (int_of_float (fst arbre.size), int_of_float (snd arbre.size)) in
-          if x < w/2 then 
-            if y < h/2 then 
+          if x < w/2 && y < h/2 then 
               (*cadran en haut à gauche*)
               {tree = Node ((insert a value), b, c, d); size= arbre.size; resol = arbre.resol}
-            else 
+          else if x < w/2 && y >= h/2 then
               (*cadran en bas à gauche*)
               {tree = Node (a, b, (insert c value), d); size = arbre.size; resol = arbre.resol}
-          else 
-            if y < h/2 then 
+          else if x >= w/2 && y < h/2 then     
               (*cadran en haut à droite*)
-              {tree = Node (a, (insert b value), c, d); size = arbre.size; resol = arbre.resol}
-            else 
+            {tree = Node (a, (insert b value), c, d); size = arbre.size; resol = arbre.resol}
+          else if x >= w/2 && y >= h/2 then
               (*cadran en bas à droite*)
-              {tree = Node (a, b, c, (insert d value)); size = arbre.size; resol = arbre.resol}
+            {tree = Node (a, b, c, (insert d value)); size = arbre.size; resol = arbre.resol}
+          else 
+            failwith "insert_intermediaire : arbre incompatible"
         | _ -> failwith "insert_intermediaire : arbre incompatible"
   in
 
