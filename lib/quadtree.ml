@@ -67,8 +67,14 @@ let rec insert : 'a qtree -> 'a feuille-> 'a qtree =
     | Leaf v -> if (equals_with_resol v.position value.position arbre.resol ) then {tree=Leaf value;size=arbre.size; resol = arbre.resol}  else 
       (*sinon il faut créer un nouveau noeud*)
       let (width, height) = arbre.size in
-      let arbre_inter = create2 width height arbre.resol in
-      insert_intermediaire (insert_intermediaire arbre_inter {position = v.position; value = v.value}) {position = value.position; value = value.value}
+        if width /. 2. < fst arbre.resol || height /. 2. < snd arbre.resol then 
+          (*on est arrivé à la résolution minimale, on crée un nouveau noeud*)
+          let arbre_inter = create2 width height arbre.resol in
+          insert_intermediaire (insert_intermediaire arbre_inter v) value
+        else 
+          (*on peut encore descendre dans l'arbre*)
+          let arbre_inter = create2 width height arbre.resol in
+          insert_intermediaire (insert_intermediaire arbre_inter {position = v.position; value = v.value}) {position = value.position; value = value.value}
 
     | Node (_,_,_,_) -> 
       (*maintenant faut choisir dans quel cadran on répartis la 
