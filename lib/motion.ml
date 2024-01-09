@@ -1,4 +1,6 @@
-(*open Iterator
+open Iterator
+open Quadtree
+open Briques
 let g = -9.81
 
 
@@ -6,6 +8,9 @@ type vector2 = float*float (*seras implémenté plus en détail plus tard *)
 
 
 type position = vector2 * vector2
+type balle = position * float
+type raquette = unit
+type state = Briques2d.brique qtree * raquette * balle
 
 (* Descripteur env. *)
 (* On le voudra probablement mis dans un autre fichier, pour avoir acces aux briques pas exemple? *)
@@ -35,7 +40,7 @@ struct
       let acceleration = Flux.constant (0.,g)
       in let speed = Flux.map (fun (x,y) -> (x +. vx, y +. vy)) (integre E.dt acceleration)
       in let position = Flux.map (fun (x,y) -> (x +. px, y +. py)) (integre E.dt speed)
-      in unless (Flux.map2 (fun p v -> (p, v)) position speed) 
+      in Flux.unless (Flux.map2 (fun p v -> (p, v)) position speed) 
         (fun b -> (E.contact b)) 
-        (fun (p, v) -> run (p, E.rebond p v))
-end*)
+        (fun (p, v) -> run (E.rebond (p, v)))
+end
