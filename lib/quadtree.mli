@@ -32,4 +32,6 @@ val isOccupied : 'a qtree -> vector2 -> 'a feuille option
   (*de plus, on renvoie le qtree à jour*)
 val colide : 'a qtree -> float*float -> float*float -> float -> 'a qtree * (float*float)* 'a feuille option 
 
+val print : 'a qtree -> unit
+
 

@@ -155,6 +155,15 @@ let colide : 'a qtree -> float*float -> float*float -> float -> 'a qtree * (floa
     if did_colide then (arbre_inter, (-. vx, -. vy), brique) else (arbre, (vx,vy), None)
 
 
+let print arbre = 
+  let rec print_inter arbre = 
+    match arbre.tree with 
+      | Empty -> print_string "Empty"
+      | Leaf v -> print_string "Leaf at" ;print_string (string_of_float (fst v.position)); print_string (string_of_float (snd v.position))
+      | Node (a,b,c,d) -> print_string "Node"
+  in
+  print_inter arbre
+
 
 
 
