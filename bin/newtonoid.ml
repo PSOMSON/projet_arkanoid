@@ -23,29 +23,33 @@ let graphic_format =
     (int_of_float ((2. *. Box.marge) +. Box.supx -. Box.infx))
     (int_of_float ((2. *. Box.marge) +. Box.supy -. Box.infy))
 
-let draw_state etat = failwith "A DEFINIR"
+let draw_state (qtree, raquette, balle) =
+    G
+
 
 (* extrait le score courant d'un etat : *)
-let score etat : int = failwith "A DEFINIR"
+let score state : int = failwith "A DEFINIR"
 
-let draw flux_etat =
-  let rec loop flux_etat last_score =
-    match Flux.(uncons flux_etat) with
+let draw flux_state =
+  let rec loop flux_state last_score =
+    match Flux.(uncons flux_state) with
     | None -> last_score
-    | Some (etat, flux_etat') ->
+    | Some (state, flux_state') ->
       Graphics.clear_graph ();
       (* DESSIN ETAT *)
-      draw_state etat;
+      draw_state state;
       (* FIN DESSIN ETAT *)
       Graphics.synchronize ();
       Unix.sleepf Init.dt;
-      loop flux_etat' (last_score + score etat)
+      loop flux_state' (last_score + score state)
     | _ -> assert false
   in
   Graphics.open_graph graphic_format;
   Graphics.auto_synchronize false;
-  let score = loop flux_etat 0 in
+  let score = loop flux_state 0 in
   Format.printf "Score final : %d@\n" score;
   Graphics.close_graph ()
 
-let () = game_hello ()
+let () = game_hello ();
+        let first_state = game_initialize Box.infx Box.infy Box.supx Box.supy 30 10000 in
+        let states = Flux.(cons first_state vide)

@@ -8,6 +8,7 @@ type vector2 = float*float (*seras implémenté plus en détail plus tard *)
 
 
 type position = vector2 * vector2
+type taille = float*float
 type balle = position * float
 type raquette = unit
 type state = Briques2d.brique qtree * raquette * balle
@@ -16,6 +17,7 @@ type state = Briques2d.brique qtree * raquette * balle
 (* On le voudra probablement mis dans un autre fichier, pour avoir acces aux briques pas exemple? *)
 module type Env =
 sig
+  type world
   val dt : float
   val contact : position -> bool
   val rebond : position -> position
@@ -44,3 +46,11 @@ struct
         (fun b -> (E.contact b)) 
         (fun (p, v) -> run (E.rebond (p, v)))
 end
+
+module EnvRaquette (E : Env) : Env = struct
+  type world = position * taille (* decrit la raquette *)
+  let dt = E.dt
+  let contact p = false
+  let rebond p = p
+end
+  
