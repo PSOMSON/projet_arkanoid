@@ -19,10 +19,19 @@ and 'a qtree = {tree : 'a tree; size : float*float; resol : float*float}
   (*l'arbre est-il vide ?*)
 val empty : 'a qtree -> bool
 
+val createAndInitialize : float -> float -> float*float -> 'a -> 'a qtree
+
   (*création de l'arbre à partir de la taille de la fenêtre*)
 val create : float -> float -> float*float -> 'a qtree
 (*permet d'insérer un objet 'a à une position donnée par vector2*)
+(*bon, on a éssayé de faire que l'arbre s'agrandis à chaque ajout, mais cela pose 
+   d'inéxplicable problèmes de réccursions et on a suffisament perdu de temps comme 
+   ça, on vas partir sur une initialisation de l'arbre l'ors de la création avec des 
+   nulls partout, la "insert" et donc depecated*) 
 val insert : 'a qtree -> 'a feuille-> 'a qtree
+
+val insertOnInitializedTree : 'a qtree -> 'a feuille -> 'a qtree
+
 val remove : 'a qtree -> vector2 -> 'a qtree
 val isOccupied : 'a qtree -> vector2 -> 'a feuille option
 
