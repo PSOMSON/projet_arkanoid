@@ -20,6 +20,29 @@ let empty arbre =
 let create width height res = 
   {tree = Empty; size = (width, height); resol = res}
 
+let  createAndInitialize : float -> float -> float*float -> 'a -> 'a qtree
+  = fun width height (r1,r2) emptyValue ->
+
+    let rec createAndInitializeInter : float -> float -> float*float -> 'a ->float*float -> 'a qtree
+      = fun width height (r1,r2) emptyValue currentPos->
+      if (width <= r1) || (height<= r2) then 
+        let (nw, nh) = (width /. 2., height /. 2.) in
+        let (x,y) = currentPos in 
+        let emptyLeave = {position= (x+.nw, y+.nh); value = emptyValue} in 
+          {tree = Leaf(emptyLeave); size = (width, height); resol = (r1,r2)}
+      else 
+        let (nw, nh) = (width /. 2., height /. 2.) in
+        let (x,y) = currentPos in 
+          {tree = Node((createAndInitializeInter nw nh (r1,r2) emptyValue (x,y)),
+                      (createAndInitializeInter nw nh (r1,r2) emptyValue (nw +.x, y)), 
+                      (createAndInitializeInter nw nh (r1,r2) emptyValue (x, nh +. y)), 
+                      (createAndInitializeInter nw nh (r1,r2) emptyValue (nw +. x, nh +. y)))
+          ; size = (width, height)
+          ; resol = (r1,r2)}
+      in 
+      createAndInitializeInter width height (r1,r2) emptyValue (0., 0.)
+    
+
 let create2 width height res = 
   let arbre_inter = create (width/.2.) (height/.2.) res in
   {tree = Node(arbre_inter, arbre_inter, arbre_inter, arbre_inter); size = (width, height); resol = res}
@@ -33,6 +56,37 @@ let equals_with_resol posa posb resol =
   (xa/w) == (xb/w) && (ya/h) == (yb/h)
 
   
+let rec insertOnInitializedTree : 'a qtree -> 'a feuille -> 'a qtree = 
+  fun arbre value -> 
+  
+    let insert_intermediaire : 'a qtree -> 'a feuille -> 'b qtree =
+    fun arbre value ->
+      match arbre.tree with
+        | Node (a,b,c,d) ->
+          let (x,y) = (int_of_float (fst value.position), int_of_float (snd value.position)) in
+          let (w,h) = (int_of_float (fst arbre.size), int_of_float (snd arbre.size)) in
+          if x < w/2 && y < h/2 then 
+              (*cadran en haut à gauche*)
+              {tree = Node ((insertOnInitializedTree a value), b, c, d); size= arbre.size; resol = arbre.resol}
+          else if x < w/2 && y >= h/2 then
+              (*cadran en bas à gauche*)
+              {tree = Node (a, b, (insertOnInitializedTree c value), d); size = arbre.size; resol = arbre.resol}
+          else if x >= w/2 && y < h/2 then     
+              (*cadran en haut à droite*)
+            {tree = Node (a, (insertOnInitializedTree b value), c, d); size = arbre.size; resol = arbre.resol}
+          else if x >= w/2 && y >= h/2 then
+              (*cadran en bas à droite*)
+            {tree = Node (a, b, c, (insertOnInitializedTree d value)); size = arbre.size; resol = arbre.resol}
+          else 
+            failwith "insert_intermediaire : arbre incompatible"
+        | _ -> failwith "insert_intermediaire : arbre incompatible"
+    in
+
+  match arbre.tree with 
+    | Node(_,_,_,_) -> (insert_intermediaire arbre value)
+    | Leaf(_) -> {tree = Leaf (value); size = arbre.size; resol = arbre.resol}
+    | Empty -> failwith "not initialized tree, error"
+
 
 let rec insert : 'a qtree -> 'a feuille-> 'a qtree =
   fun arbre value ->
@@ -44,20 +98,20 @@ let rec insert : 'a qtree -> 'a feuille-> 'a qtree =
         | Node (a,b,c,d) ->
           let (x,y) = (int_of_float (fst value.position), int_of_float (snd value.position)) in
           let (w,h) = (int_of_float (fst arbre.size), int_of_float (snd arbre.size)) in
-          if x < w/2 then 
-            if y < h/2 then 
+          if x < w/2 && y < h/2 then 
               (*cadran en haut à gauche*)
               {tree = Node ((insert a value), b, c, d); size= arbre.size; resol = arbre.resol}
-            else 
+          else if x < w/2 && y >= h/2 then
               (*cadran en bas à gauche*)
               {tree = Node (a, b, (insert c value), d); size = arbre.size; resol = arbre.resol}
-          else 
-            if y < h/2 then 
+          else if x >= w/2 && y < h/2 then     
               (*cadran en haut à droite*)
-              {tree = Node (a, (insert b value), c, d); size = arbre.size; resol = arbre.resol}
-            else 
+            {tree = Node (a, (insert b value), c, d); size = arbre.size; resol = arbre.resol}
+          else if x >= w/2 && y >= h/2 then
               (*cadran en bas à droite*)
-              {tree = Node (a, b, c, (insert d value)); size = arbre.size; resol = arbre.resol}
+            {tree = Node (a, b, c, (insert d value)); size = arbre.size; resol = arbre.resol}
+          else 
+            failwith "insert_intermediaire : arbre incompatible"
         | _ -> failwith "insert_intermediaire : arbre incompatible"
   in
 
