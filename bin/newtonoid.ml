@@ -26,6 +26,9 @@ let graphic_format =
     (int_of_float ((2. *. Box.marge) +. Box.supy -. Box.infy))
 
 let draw_state (etat: state) =
+    Graphics.set_color Graphics.green;
+    Graphics.fill_rect 0 0 800 600;
+
     let _, raquette, balle, bric_list = etat in
     let (pos_balle,_), r = balle in
     let pos_raquette = Raquette.get_floats_pos raquette in
@@ -75,7 +78,6 @@ let draw flux_state =
     match Flux.(uncons flux_state) with
     | None -> last_score
     | Some (state, flux_state') ->
-      Graphics.set_color Graphics.green;
       Graphics.clear_graph ();
       (* DESSIN ETAT *)
       draw_state state;

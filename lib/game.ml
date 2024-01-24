@@ -24,18 +24,19 @@ type state = Briques2d.brique qtree * t_raquette * t_balle * Briques2d.brique li
 let populate_brics infx infy supx supy nb_briques_x nb_briques_y score_total=
     let infx', supx' = 2.*.infx, supx -. infx in
     let infy', supy' = 2.*.supy/.3. +. infy, supy -. infy in
-    let h = Float.trunc ((supy' -. infy') /. (2.*.float_of_int nb_briques_y)) in
-    let w = Float.trunc ((supx' -. infx') /. (2.*.float_of_int nb_briques_x)) in
+    let h = Float.trunc ((supy' -. infy') /. (2.*.float_of_int nb_briques_y -. 1.)) in
+    let w = Float.trunc ((supx' -. infx') /. (2.*.float_of_int nb_briques_x -. 1.)) in
     let score = score_total / (nb_briques_x * nb_briques_y) in
-    let qtree = create (supx -. infx) (supy -. infy) (w,h) in
+    let briquenulle = Briques2d.createbrique 0 Invisible (Briques2d.createpos (0.::0.::[])) (Briques2d.createdim (0.::0.::[])) in
+    let qtree = createAndInitialize (supx -. infx) (supy -. infy) (w,h) briquenulle in
     let rec aux qtree x y l =
-        if y = 2*nb_briques_y then qtree, l
-        else if x = 2*nb_briques_x then aux qtree 0 (y+2) l
+        if y >= 2*nb_briques_y then qtree, l
+        else if x >= 2*nb_briques_x then aux qtree 0 (y+2) l
         else let (xb, yb) = infx' +. (float_of_int x +. 0.5)*.w, infy' +. (float_of_int y +. 0.5)*.h in
         let pb = Briques2d.createpos [xb; yb] in
         let d = Briques2d.createdim [w;h] in
         let b = Briques2d.createbrique score Briques.Cassable pb d in
-        aux (insert qtree {position = (xb, yb); value = b}) (x+1) y (b::l)
+        aux (insertOnInitializedTree qtree {position = (xb, yb); value = b}) (x+2) y (b::l)
     in aux qtree 0 0 []
 
     (* Encore incomplet, utilise la fonction ci-dessus, et prend des valeurs initiales temporaires*)
@@ -43,7 +44,7 @@ let game_initialize infx infy supx supy nb_briques_x nb_briques_y score_total : 
     print_string "Initializing game";
     let qtree, bric_list = populate_brics infx infy supx supy nb_briques_x nb_briques_y  score_total in
     let raquette = Raquette.create_raquette_autom supx infx supy infy in
-    let position_init = (supx -. infx) /. 2., (supy -. infy) /. 2. in
+    let position_init = (supx +. infx) /. 2., (supy +. infy) /. 2. in
     let vitesse_init = (0., 0.) in
     let balle = ((position_init, vitesse_init),  10) in (* On démarre à la moitié de l'écran, à gérer plus tard*)
     print_string "Game initialized !";

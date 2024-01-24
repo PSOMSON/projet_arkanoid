@@ -49,7 +49,7 @@ let create_raquette_autom : float -> float -> float -> float -> Raquette2d.raque
   fun box_xmax box_xmin box_ymax box_ymin ->
     let dimx = 80. in
     let dimy = 20. in
-    let posx =  (box_xmax -. box_xmin) /. 2. in
+    let posx =  (box_xmax +. box_xmin) /. 2. in
     let posy = 5. +. dimy/.2. in
     let pos = Raquette2d.create_pos [posx;posy] in
     Printf.printf "La raquette aura pour position = (%f,%f)\n" posx posy;
