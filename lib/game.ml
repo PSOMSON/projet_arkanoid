@@ -17,6 +17,8 @@ module MotionArkanoid =
     Motion(EnvMotion)
 
 
+
+
 let game_hello () = print_endline "Hello, Newtonoiders!"
 
 (* Temporary before we know what to do with it *)
@@ -47,13 +49,13 @@ let populate_brics infx infy supx supy nb_briques_x nb_briques_y score_total=
 
     (* Encore incomplet, utilise la fonction ci-dessus, et prend des valeurs initiales temporaires*)
 let game_initialize infx infy supx supy nb_briques_x nb_briques_y score_total : state =
-    print_string "Initializing game";
+    print_string "Initializing game \n";
     let qtree, bric_list = populate_brics infx infy supx supy nb_briques_x nb_briques_y  score_total in
     let raquette = Raquette.create_raquette_autom supx infx supy infy in
     let position_init = (supx +. infx) /. 2., (supy +. infy) /. 2. in
     let vitesse_init = (0., 0.) in
     let balle = ((position_init, vitesse_init),  10) in (* On démarre à la moitié de l'écran, à gérer plus tard*)
-    print_string "Game initialized !";
+    print_string "Game initialized ! \n";
     (qtree, raquette, balle, bric_list)
 
 let game_step infx supx dt (etat:state) : state =
@@ -65,7 +67,7 @@ let game_step infx supx dt (etat:state) : state =
     let raq = raquette in
     let ((xr, yr), _) = Raquette.get_floats_pos raq in
     let (w,h) = Raquette.get_floats_dim raq in
-    let posr' = Raquette.get_pos_raq infx supx w yr in
+    let posr' = Raquette.get_pos_raq supx infx w yr in
     let (vxr', vyr') = MotionArkanoid.derivate dt (xr, yr) posr' in
     let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; snd posr'], [vxr'; vyr'])) (create_dim [w; h])) in
     let brique = isOccupied qtree posb' in

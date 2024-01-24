@@ -6,6 +6,7 @@ let g = -9.81
 
 type vector2 = float*float (*seras implémenté plus en détail plus tard *)
 
+let croissance = 0.003
 
 type position = vector2 * vector2
 type taille = float*float
@@ -65,7 +66,7 @@ struct
             let (bx, by, tx, ty) = (cx -. w /. 2., cy -. h /. 2., cx +. w /. 2., cy +. h /. 2.)
             in let (dx, dy) = ((px -. bx), (py -. tx))
             in let (rl, rr) = dx /. r *. (sign vx), dx /. r *. (sign vx)
-            in if px +. r >= bx && py -. r <= ty && px -. r <= tx then
+            in let ((a,b),(c,d)) = if px +. r >= bx && py -. r <= ty && px -. r <= tx then
                 if rl -. 1. <= -0.1 && rl +. 1. >= 0.1 then
                     let v' = Float.(cos (asin rl) *. (vx +. 0.3 *. cvx), -. sin (asin rl) *. (vy +. 0.3 *. cvy))
                     in ((px, py), v')
@@ -76,6 +77,7 @@ struct
                 else if Float.abs (rr -. 1.) < 0.1 then ((px, py), (-. vx +. cvx, vy +. cvy))
                 else ((px, py), (vx +. 0.3*. cvx, -. vy +. 0.3*. cvy))
             else ((px, py), (vx, vy))
+            in ((a,b),(c*.croissance,d*.croissance))
 
 
 let derivate dt acc flux =
