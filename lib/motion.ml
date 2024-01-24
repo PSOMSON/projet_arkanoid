@@ -34,16 +34,16 @@ let integre dt flux =
     Tick (lazy (Some (init, Flux.map2 iter acc flux)))
   in acc;;
 
-(* TODO Mise a jour d'etat!! *)
+(*(* TODO Mise a jour d'etat!! *)
 module Motion (E : Env) =
 struct
-  let rec run : position -> state -> position Flux.t 
+  let rec run : position -> state -> position Flux.t
     = fun ((px, py), (vx, vy)) ->
       let acceleration = Flux.constant (0.,g)
       in let speed = Flux.map (fun (x,y) -> (x +. vx, y +. vy)) (integre E.dt acceleration)
       in let position = Flux.map (fun (x,y) -> (x +. px, y +. py)) (integre E.dt speed)
-      in Flux.unless (Flux.map2 (fun p v -> (p, v)) position speed) 
-        (fun b -> (E.contact b world)) 
+      in Flux.unless (Flux.map2 (fun p v -> (p, v)) position speed)
+        (fun b -> (E.contact b world))
         (fun (p, v) -> (run (E.rebond (p, v) world) state))
 end
 
@@ -53,4 +53,4 @@ module EnvRaquette (E : Env) : Env = struct
   let contact p w = false
   let rebond p w = p
 end
-  
+  *)
