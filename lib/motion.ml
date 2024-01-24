@@ -34,25 +34,23 @@ let integre dt acc flux =
 (*TODO Mise a jour d'etat!! *)
 module Motion (E : Env) =
 struct
-  let contact_x x dx = let (bx, tx, _) = E.bords
-  in (x < bx && dx < 0.) || (x > tx && dx > 0.)  
-  let contact_y y dy = let (_, _, ty) = E.bords
-  in (y > ty && dy > 0.)
+  let contact_x r x dx = let (bx, tx, _) = E.bords
+  in ((x-.r) < bx && dx < 0.) || ((x+.r) > tx && dx > 0.)  
+  let contact_y r y dy = let (_, _, ty) = E.bords
+  in ((y+.r) > ty && dy > 0.)
 
-  let rebond_x x dx = if contact_x x dx then
+  let rebond_x r x dx = if contact_x r x dx then
     -. dx
   else dx
 
-  let rebond_y y dy = if contact_y y dy then
+  let rebond_y r y dy = if contact_y r y dy then
     -. dy
   else dy
 
-    let rec run : position -> int -> position
+    let rec run : position -> float -> position
     = fun ((px, py), (vx, vy)) r ->
       let acceleration =  (0.,g)
       in let (dvx, dvy) = (integre E.dt (vx, vy) acceleration)
       in let (dpx, dpy) = (integre E.dt (px, py) (dvx, dvy))
-      in if contact_x dpx dvx then ((dpx, dpy), (rebond_x dpx dvx, dvy))
-      else if contact_y dpy dvy then ((dpx, dpy), (dvx, rebond_y dpy dvy))
-      else ((dpx, dpy), (dvx, dvy))
+      in ((dpx, dpy), (rebond_x r dpx dvx, rebond_y r dpy dvy))
 end
