@@ -1,3 +1,6 @@
+open Iterator
+open Input
+
 
 module type Raquette =
 sig
@@ -63,3 +66,10 @@ let create_raquette_autom : float -> float -> float -> float -> Raquette2d.raque
 let%test "Création de brique" =
     let _ = create_raquette_autom 100. 0. 100. 0. in
     true
+
+let get_pos_raq : float -> (float*float) = fun y ->
+  let flux_souris = Input.mouse in
+  let return = Flux.uncons flux_souris in
+  match return with
+  | Some((x,_),_) -> Printf.printf "Je suis à la position %f" x;(x,y)
+  | None -> failwith "Erreur récupération position de la souris"
