@@ -23,8 +23,8 @@ let graphic_format =
     (int_of_float ((2. *. Box.marge) +. Box.supx -. Box.infx))
     (int_of_float ((2. *. Box.marge) +. Box.supy -. Box.infy))
 
-let draw_state (qtree, raquette, balle) =
-    G
+let draw_state (qtree, raquette, balle, bric_list) =
+
 
 
 (* extrait le score courant d'un etat : *)
