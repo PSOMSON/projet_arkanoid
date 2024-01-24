@@ -17,10 +17,11 @@ type state = Briques2d.brique qtree * raquette * balle
 (* On le voudra probablement mis dans un autre fichier, pour avoir acces aux briques pas exemple? *)
 module type Env =
 sig
-  type world
+  type box = float * float* float
+  val bords : box
   val dt : float
-  val contact : position -> world -> bool
-  val rebond : position -> world -> position
+  val contact : position -> box -> bool
+  val rebond : position -> box -> position
 end
 
 let integre dt acc flux =
@@ -33,18 +34,10 @@ let integre dt acc flux =
 (*TODO Mise a jour d'etat!! *)
 module Motion (E : Env) =
 struct
-  let rec run : position -> position 
+  let rec run : position -> position
     = fun ((px, py), (vx, vy)) ->
       let acceleration =  (0.,g)
       in let speed = (integre E.dt (vx, vy) acceleration)
       in let position = (integre E.dt (px, py) speed)
       in (position, speed)
 end
-
-module EnvRaquette (E : Env) : Env = struct
-  type world = raquette (* decrit la raquette *)
-  let dt = E.dt
-  let contact p w = false
-  let rebond p w = p
-end
- 

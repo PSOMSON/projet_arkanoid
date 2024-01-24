@@ -2,14 +2,19 @@ open Quadtree
 open Motion
 open Briques
 open Raquette
+open Iterator
 
 module EnvMotion :  Env =
     struct
         type world
+        let bords = 10. , 590. , 790
         let dt = 1000./.60.
         let contact = fun _ _ -> false
         let rebond = fun p _ -> p
     end
+module MotionArkanoid =
+    Motion(EnvMotion)
+
 
 let game_hello () = print_endline "Hello, Newtonoiders!"
 
@@ -50,5 +55,11 @@ let game_initialize infx infy supx supy nb_briques_x nb_briques_y score_total : 
     print_string "Game initialized !";
     (qtree, raquette, balle, bric_list)
 
-let game_step state =
-    state
+let game_step etat_flux =
+    let (qtree, raquette, balle, bric_list) = match etat_flux with
+                        | Some (qtree, raquette, balle, bric_list) -> (qtree, raquette, balle, bric_list)
+                        | None -> failwith "Erreur : etat_flux vide"
+    in
+    let (pos, vit), r = balle in
+    let (pos', vit') = MotionArkanoid.run (pos, vit) in
+    let balle' = (pos', vit'), r in
