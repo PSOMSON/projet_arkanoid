@@ -34,8 +34,8 @@ let integre dt acc flux =
 (*TODO Mise a jour d'etat!! *)
 module Motion (E : Env) =
 struct
-  let rec run : position -> position
-    = fun ((px, py), (vx, vy)) ->
+    let rec run : position -> int -> position
+    = fun ((px, py), (vx, vy)) r ->
       let acceleration =  (0.,g)
       in let speed = (integre E.dt (vx, vy) acceleration)
       in let position = (integre E.dt (px, py) speed)
