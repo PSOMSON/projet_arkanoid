@@ -25,7 +25,40 @@ let graphic_format =
     (int_of_float ((2. *. Box.marge) +. Box.supx -. Box.infx))
     (int_of_float ((2. *. Box.marge) +. Box.supy -. Box.infy))
 
-let draw_state (_, raquette, balle, bric_list) =
+let draw_state (etat: state) =
+    let _, raquette, balle, bric_list = etat in
+    let (pos_balle,_), r = balle in
+    let pos_raquette = Raquette.get_floats_pos raquette in
+    let (w,h) = Raquette.get_floats_dim raquette in
+
+    Graphics.set_color Graphics.black;
+    Graphics.fill_circle (int_of_float (fst pos_balle)) (int_of_float (snd pos_balle)) r;
+    Graphics.draw_circle (int_of_float (fst pos_balle)) (int_of_float (snd pos_balle)) r;
+    Graphics.set_color Graphics.blue;
+    Graphics.fill_rect (int_of_float (fst pos_raquette -. w/.2.)) (int_of_float (snd pos_raquette -. h/.2.)) (int_of_float w) (int_of_float h);
+    Graphics.set_color Graphics.black;
+    Graphics.draw_rect (int_of_float (fst pos_raquette -. w/.2.)) (int_of_float (snd pos_raquette -. h/.2.)) (int_of_float w) (int_of_float h);
+
+    let rec draw_brics l =
+        match l with
+        | [] -> ()
+        | b::q -> let pos = Briques.Briques2d.getposition b in
+        let (x,y) = match Briques.Briques2d.getpos pos with
+        | x::[y] -> (x,y)
+        | _ -> failwith "Erreur de position de brique" in
+        let dim = Briques.Briques2d.getdimension b in
+        let (w,h) = match Briques.Briques2d.getdim dim with
+        | w::[h] -> (w,h)
+        | _ -> failwith "Erreur de dimension de brique" in
+        let x1, x2 = int_of_float (x -. w/.2.), int_of_float (x +. w/.2.) in
+        let y1, y2 = int_of_float (y -. h/.2.), int_of_float (y +. h/.2.) in
+        Graphics.set_color Graphics.red;
+        Graphics.fill_rect x1 y1 (x2-x1) (y2-y1);
+        Graphics.set_color Graphics.black;
+        Graphics.draw_rect x1 y1 (x2-x1) (y2-y1);
+        draw_brics q
+    in
+    draw_brics bric_list
 
 
 (* extrait le score courant d'un etat : *)
@@ -42,6 +75,7 @@ let draw flux_state =
     match Flux.(uncons flux_state) with
     | None -> last_score
     | Some (state, flux_state') ->
+      Graphics.set_color Graphics.green;
       Graphics.clear_graph ();
       (* DESSIN ETAT *)
       draw_state state;
@@ -61,4 +95,6 @@ let () = game_hello ();
         let nb_bloc_x = 10 in
         let nb_bloc_y = 5 in
         let first_state = game_initialize Box.infx Box.infy Box.supx Box.supy nb_bloc_x nb_bloc_y score_total in
-        let states = Flux.(cons first_state vide) in ()
+        let states = Flux.(cons first_state vide) in
+        (*draw states*)
+        draw states
