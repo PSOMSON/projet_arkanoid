@@ -23,28 +23,22 @@ sig
   val rebond : position -> world -> position
 end
 
-let integre dt flux =
-  (* valeur initiale de l'intégrateur                         *)
-  let init = ( 0., 0.) in
+let integre dt acc flux =
   (* fonction auxiliaire de calcul de acc_{i} + dt * flux_{i} *)
   let iter (acc1, acc2) (flux1, flux2) =
-    (acc1 +. dt *. flux1, acc2 +. dt *. flux2) in
+    (acc1 +. dt *. flux1, acc2 +. dt *. flux2)
   (* définition récursive du flux acc                         *)
-  let rec acc =
-    Tick (lazy (Some (init, Flux.map2 iter acc flux)))
-  in acc;;
+  in iter acc flux;;
 
-(*(* TODO Mise a jour d'etat!! *)
+(*TODO Mise a jour d'etat!! *)
 module Motion (E : Env) =
 struct
-  let rec run : position -> state -> position Flux.t
+  let rec run : position -> position 
     = fun ((px, py), (vx, vy)) ->
-      let acceleration = Flux.constant (0.,g)
-      in let speed = Flux.map (fun (x,y) -> (x +. vx, y +. vy)) (integre E.dt acceleration)
-      in let position = Flux.map (fun (x,y) -> (x +. px, y +. py)) (integre E.dt speed)
-      in Flux.unless (Flux.map2 (fun p v -> (p, v)) position speed)
-        (fun b -> (E.contact b world))
-        (fun (p, v) -> (run (E.rebond (p, v) world) state))
+      let acceleration =  (0.,g)
+      in let speed = (integre E.dt (vx, vy) acceleration)
+      in let position = (integre E.dt (px, py) speed)
+      in (position, speed)
 end
 
 module EnvRaquette (E : Env) : Env = struct
@@ -53,4 +47,4 @@ module EnvRaquette (E : Env) : Env = struct
   let contact p w = false
   let rebond p w = p
 end
-  *)
+ 
