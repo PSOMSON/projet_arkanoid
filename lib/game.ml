@@ -56,31 +56,42 @@ let game_initialize infx infy supx supy nb_briques_x nb_briques_y score_total : 
     print_string "Game initialized !";
     (qtree, raquette, balle, bric_list)
 
-let game_step etat infx supx dt =
+let game_step infx supx dt (etat:state) : state =
     let (qtree, raquette, balle, bric_list) = etat
     in
     let (posb, vitb), r = balle in
-    let (posb', vitb') = MotionArkanoid.run r (posb, vitb) in
-    let ((xr, yr), _), (w, h) = raquette in
+    let r' = float_of_int r in
+    let (posb', vitb') = MotionArkanoid.run r' (posb, vitb) in
+    let raq = raquette in
+    let ((xr, yr), _) = Raquette.get_floats_pos raq in
+    let (w,h) = Raquette.get_floats_dim raq in
     let posr' = Raquette.get_pos_raq infx supx w yr in
     let (vxr', vyr') = MotionArkanoid.derivate dt (xr, yr) posr' in
-    let raquette' = (posr', (vxr', vyr')), (w, h) in
+    let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; snd posr'], [vxr'; vyr'])) (create_dim [w; h])) in
     let brique = isOccupied qtree posb' in
-    let qtree' = match brique with
+    let qtree' : Briques2d.brique qtree = match brique with
                 | None -> qtree
                 | Some {position=_; value=b} -> Briques.remove_quadtree qtree b
     in
-    let bric_list' = match brique with
+    let bric_list' : Briques2d.brique list= match brique with
                 | None -> bric_list
                 | Some {position=_; value=b} -> List.filter (fun x -> x <> b) bric_list
     in
-    let trucb'' = match brique with
-                | None -> MotionArkanoid.collision r (posb', vitb') (posr', (vxr', vyr')) (w, h)
+    let trucb'' : position = match brique with
+                | None -> MotionArkanoid.collision r' (posb', vitb') (posr', (vxr', vyr')) (w, h)
 
                 | Some {position=p; value=b} -> match Briques2d.getdim (Briques2d.getdimension b) with
-                                                | [w;h] -> MotionArkanoid.collision r (posb', vitb') (p,(0.,0.)) (w,h)
+                                                | [w;h] -> MotionArkanoid.collision r' (posb', vitb') (p,(0.,0.)) (w,h)
                                                 | _ -> failwith "Erreur dimension brique"
 
     in
-    let balle'' = r, (trucb'', (posb', vitb')) in
-    (qtree', raquette', balle'', bric_list')
+    let balle'' : t_balle = trucb'', r in
+    let final : state = (qtree', raquette', balle'', bric_list')
+    in final
+
+let game_flux infx supx dt etat_initial =
+    let fonction = game_step infx supx dt in
+    let rec acc =
+        Tick (lazy (Some (etat_initial, Flux.map (fun x ->fonction x) acc)))
+    in
+    acc

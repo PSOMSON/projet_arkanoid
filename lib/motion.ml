@@ -63,9 +63,8 @@ struct
     let collision : float -> position -> position -> float*float -> position =
         fun r ((px, py), (vx, vy)) ((cx, cy), (cvx, cvy))(w,h) ->
             let (bx, by, tx, ty) = (cx -. w /. 2., cy -. h /. 2., cx +. w /. 2., cy +. h /. 2.)
-            in let (tl, tr) = ((tx, ty), (bx, ty))
-            in let (dtlx, dtly, dtrx, dtry) = ((px -. fst tl), (py -. snd tl), (px -. fst tr), (py -. snd tr))
-            in let (rl, rr) = dtlx /. r *. (sign vx), dtrx /. r *. (sign vx)
+            in let (dx, dy) = ((px -. bx), (py -. tx))
+            in let (rl, rr) = dx /. r *. (sign vx), dx /. r *. (sign vx)
             in if px +. r >= bx && py -. r <= ty && px -. r <= tx then
                 if rl -. 1. <= -0.1 && rl +. 1. >= 0.1 then
                     let v' = Float.(cos (asin rl) *. (vx +. 0.3 *. cvx), -. sin (asin rl) *. (vy +. 0.3 *. cvy))

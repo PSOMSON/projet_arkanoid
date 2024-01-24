@@ -98,6 +98,5 @@ let () = game_hello ();
         let nb_bloc_x = 10 in
         let nb_bloc_y = 5 in
         let first_state = game_initialize Box.infx Box.infy Box.supx Box.supy nb_bloc_x nb_bloc_y score_total in
-        let states = Flux.(cons first_state vide) in
         (*draw states*)
-        draw states
+        draw (game_flux Box.infx Box.supx Init.dt first_state)
