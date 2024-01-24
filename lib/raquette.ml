@@ -67,9 +67,12 @@ let%test "Création de brique" =
     let _ = create_raquette_autom 100. 0. 100. 0. in
     true
 
-let get_pos_raq : float -> (float*float) = fun y ->
+let get_pos_raq : float -> float -> float -> float -> (float*float) = fun bxmax bxmin lraq y ->
   let flux_souris = Input.mouse in
   let return = Flux.uncons flux_souris in
   match return with
-  | Some((x,_),_) -> Printf.printf "Je suis à la position %f" x;(x,y)
+  | Some((x,_),_) -> Printf.printf "Je suis à la position %f" x;
+    if x > bxmax then (bxmax -. lraq/.2.,y)
+    else if x < bxmin then (bxmin +. lraq/.2.,y)
+    else (x,y)
   | None -> failwith "Erreur récupération position de la souris"
