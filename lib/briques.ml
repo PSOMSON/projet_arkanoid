@@ -6,7 +6,7 @@ open Quadtree
 
 (*note : on stoque la position de chaque brique comme étant la position de 
    leur coin inférieur gauche !*)
-type etat = Cassable | Incassable
+type etat = Cassable | Incassable | Invisible
 
 module type Briques =
 sig
@@ -170,6 +170,6 @@ let%test "test génération d'une brique" =
 *)
 
 let%test "Terminaison" = 
-   let _ = genbriques 10 0. 100. 0. 100. 1. 10. 1. 10. 1 Cassable in
+   let _ = genbriques 4 0. 100. 0. 100. 1. 10. 1. 10. 1 Cassable in
    true
 
