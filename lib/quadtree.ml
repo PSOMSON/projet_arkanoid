@@ -84,7 +84,7 @@ let rec insertOnInitializedTree : 'a qtree -> 'a feuille -> 'a qtree =
 
   match arbre.tree with 
     | Node(_,_,_,_) -> (insert_intermediaire arbre value)
-    | Leaf(_) -> {tree = Leaf (value); size = arbre.size; resol = arbre.resol}
+    | Leaf(l) -> {tree = Leaf ({position = l.position; value = value.value}); size = arbre.size; resol = arbre.resol}
     | Empty -> failwith "not initialized tree, error"
 
 
@@ -138,23 +138,23 @@ let rec insert : 'a qtree -> 'a feuille-> 'a qtree =
 
 
 (* ce remove est assez rudimentaire, faudrais le rendre plus opti (supprimer les branches mortes..*)
-let rec remove arbre pos = 
+let rec remove arbre pos nulElement = 
   match arbre.tree with 
     | Empty -> {tree=Empty;size=arbre.size; resol = arbre.resol}
-    | Leaf v -> if (equals_with_resol (v.position) pos arbre.resol) then {tree=Empty;size=arbre.size; resol = arbre.resol} else {tree=Leaf v;size=arbre.size; resol = arbre.resol}
+    | Leaf v -> if (equals_with_resol (v.position) pos arbre.resol) then {tree=Leaf({position = v.position; value  = nulElement});size=arbre.size; resol = arbre.resol} else {tree=Leaf v;size=arbre.size; resol = arbre.resol}
     | Node (a,b,c,d) -> 
       let (x,y) = (int_of_float (fst pos), int_of_float (snd pos)) in
           let (w,h) = (int_of_float (fst arbre.size), int_of_float (snd arbre.size)) in
       if x < w/2 then 
         if y < h/2 then 
-          {tree=Node ((remove a pos), b, c, d);size=arbre.size; resol = arbre.resol}
+          {tree=Node ((remove a pos nulElement), b, c, d);size=arbre.size; resol = arbre.resol}
         else 
-          {tree=Node (a, b, (remove c pos), d); size=arbre.size; resol = arbre.resol}
+          {tree=Node (a, b, (remove c pos nulElement), d); size=arbre.size; resol = arbre.resol}
       else 
         if y < h/2 then 
-          {tree=Node (a, (remove b pos), c, d); size=arbre.size; resol = arbre.resol}
+          {tree=Node (a, (remove b pos nulElement), c, d); size=arbre.size; resol = arbre.resol}
         else 
-          {tree=Node (a, b, c, (remove d pos)); size=arbre.size; resol = arbre.resol}
+          {tree=Node (a, b, c, (remove d pos nulElement)); size=arbre.size; resol = arbre.resol}
 
 let rec isOccupied arbre pos = 
   match arbre.tree with 
@@ -185,7 +185,7 @@ let colide : 'a qtree -> float*float -> float*float -> float -> 'a qtree * (floa
     let pos = (x,y) in
     match isOccupied arbre pos with 
       | None -> (arbre, false, None)
-      | Some v -> let new_arbre = (remove arbre v.position) in (new_arbre, true, Some v)          
+      | Some v -> (arbre, true, Some v)          
         
   in 
     (*soit la balle touche une balle à sa droite, à sa gauche, en haut ou en bas, ou en diagonal, dans un quel
@@ -225,7 +225,7 @@ let print arbre =
   let rec print_inter arbre prof= 
     match arbre.tree with 
       | Empty -> print_string "Empty"
-      | Leaf v -> print_string "Leaf at" ;print_string (string_of_float (fst v.position)); print_string (string_of_float (snd v.position))
+      | Leaf v -> print_string "Leaf at" ;print_string (string_of_float (fst v.position));print_string(" "); print_string (string_of_float (snd v.position))
       | Node (a,b,c,d) -> print_string "Node of size : "; print_string (string_of_float (fst arbre.size)); print_string (string_of_float (snd arbre.size)) ; 
         print_string "\n";
         print_string (gen_tabulation prof); print_inter a (prof+1);

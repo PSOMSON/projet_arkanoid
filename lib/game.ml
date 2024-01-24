@@ -34,3 +34,4 @@ let game_initialize infx infy supx supy nb_briques_x nb_briques_y score_total =
     (qtree, raquette, balle, bric_list)
 
 let game_step state =
+    state

@@ -8,17 +8,19 @@ type vector2 = float*float (*seras implémenté plus en détail plus tard *)
 
 
 type position = vector2 * vector2
+type taille = float*float
 type balle = position * float
-type raquette = unit
+type raquette = float (*position sur la ligne, aka la seule valeur qui change*)
 type state = Briques2d.brique qtree * raquette * balle
 
 (* Descripteur env. *)
 (* On le voudra probablement mis dans un autre fichier, pour avoir acces aux briques pas exemple? *)
 module type Env =
 sig
+  type world
   val dt : float
-  val contact : position -> bool
-  val rebond : position -> position
+  val contact : position -> world -> bool
+  val rebond : position -> world -> position
 end
 
 let integre dt flux =
@@ -32,15 +34,23 @@ let integre dt flux =
     Tick (lazy (Some (init, Flux.map2 iter acc flux)))
   in acc;;
 
-
+(* TODO Mise a jour d'etat!! *)
 module Motion (E : Env) =
 struct
-  let rec run : position -> position Flux.t 
+  let rec run : position -> state -> position Flux.t 
     = fun ((px, py), (vx, vy)) ->
       let acceleration = Flux.constant (0.,g)
       in let speed = Flux.map (fun (x,y) -> (x +. vx, y +. vy)) (integre E.dt acceleration)
       in let position = Flux.map (fun (x,y) -> (x +. px, y +. py)) (integre E.dt speed)
       in Flux.unless (Flux.map2 (fun p v -> (p, v)) position speed) 
-        (fun b -> (E.contact b)) 
-        (fun (p, v) -> run (E.rebond (p, v)))
+        (fun b -> (E.contact b world)) 
+        (fun (p, v) -> (run (E.rebond (p, v) world) state))
 end
+
+module EnvRaquette (E : Env) : Env = struct
+  type world = raquette (* decrit la raquette *)
+  let dt = E.dt
+  let contact p w = false
+  let rebond p w = p
+end
+  

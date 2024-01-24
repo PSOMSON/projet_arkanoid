@@ -24,8 +24,7 @@ let graphic_format =
     (int_of_float ((2. *. Box.marge) +. Box.supy -. Box.infy))
 
 let draw_state (qtree, raquette, balle, bric_list) =
-
-
+    qtree
 
 (* extrait le score courant d'un etat : *)
 let score state : int = failwith "A DEFINIR"
@@ -52,4 +51,4 @@ let draw flux_state =
 
 let () = game_hello ();
         let first_state = game_initialize Box.infx Box.infy Box.supx Box.supy 30 10000 in
-        let states = Flux.(cons first_state vide)
+        let states = Flux.(cons first_state vide) in ()
