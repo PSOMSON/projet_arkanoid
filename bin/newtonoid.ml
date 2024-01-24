@@ -31,10 +31,11 @@ let draw_state (etat: state) =
 
     let _, raquette, balle, bric_list = etat in
     let (pos_balle,_), r = balle in
-    let pos_raquette = Raquette.get_floats_pos raquette in
+    let pos_raquette, _ = Raquette.get_floats_pos raquette in
     let (w,h) = Raquette.get_floats_dim raquette in
 
     Graphics.set_color Graphics.black;
+
     Graphics.fill_circle (int_of_float (fst pos_balle)) (int_of_float (snd pos_balle)) r;
     Graphics.draw_circle (int_of_float (fst pos_balle)) (int_of_float (snd pos_balle)) r;
     Graphics.set_color Graphics.blue;

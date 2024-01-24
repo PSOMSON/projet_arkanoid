@@ -4,7 +4,7 @@ open Quadtree
    Etat Incassable : la brique ne peut pas être cassée
    Etat Invisible : la brique a été solide et a été cassée/n'est plus un obstacle pour la balle*)
 
-(*note : on stoque la position de chaque brique comme étant la position de 
+(*note : on stoque la position de chaque brique comme étant la position de
    leur coin inférieur gauche !*)
 type etat = Cassable | Incassable | Invisible
 
@@ -82,12 +82,12 @@ let chevauchement_brique : Briques2d.brique -> float -> float -> float -> float 
    if plusx || moinsx || plusy || moinsy then false
    else true
 
-let create_position bxmin bxmax bymin bymax h l = 
+let create_position bxmin bxmax bymin bymax h l =
    let x = Random.float (bxmax -. bxmin -. l) +. bxmin in
    let y = Random.float (bymax -. bymin -. h) +. bymin in
    Briques2d.createpos (x::y::[])
-   
-let find_position bxmin bxmax bymin bymax h l liste = 
+
+let find_position bxmin bxmax bymin bymax h l liste =
    Printf.printf "Je cherche une position\n";
    let x = Random.float (bxmax -. bxmin -. l) +. bxmin in
    let y = Random.float (bymax -. bymin -. h) +. bymin in
@@ -103,7 +103,7 @@ let find_position bxmin bxmax bymin bymax h l liste =
             if (chevauchement_brique b x y h l) then aux liste (create_position bxmin bxmax bymin bymax h l) n  else aux q pos (n-1)
       in aux liste p nmax
 
-(*On peut reprendre une autre implémentation d'une fenêtre pour indiquer la fenêtre où générer les briques (ie pas toute la fenêtre affichée) 
+(*On peut reprendre une autre implémentation d'une fenêtre pour indiquer la fenêtre où générer les briques (ie pas toute la fenêtre affichée)
    plutôt que les quatre paramètres mais on n'a pas repris ce module encore je crois*)
 
 
@@ -114,7 +114,7 @@ let recreate_floats : Briques2d.p -> float*float = fun p ->
 
 let rec insert_quadtree : Briques2d.briques -> Briques2d.brique qtree -> Briques2d.brique qtree = fun liste ptitree ->
    match liste with
-   
+
    |[] -> failwith "liste vide"
    |b::[] -> let feuille = {position = recreate_floats (Briques2d.getposition b); value = b} in
       Printf.printf "J'insère la dernière brique\n";
@@ -138,18 +138,18 @@ let rec genrandombrique : int -> Briques2d.briques -> float -> float -> float ->
          brique::(genrandombrique (n-1) (brique::liste) hmax hmin lmax lmin bxmax bxmin bymax bymin rptaillescore etatbrique)
       with | Not_found -> Printf.printf "je n'ai pas inséré une brique"; genrandombrique 0 liste hmax hmin lmax lmin bxmax bxmin bymax bymin rptaillescore etatbrique
 
-let briquenulle = Briques2d.createbrique 0 Invisible (Briques2d.createpos (0.::0.::[])) (Briques2d.createdim (0.::0.::[])) 
-   
+let briquenulle = Briques2d.createbrique 0 Invisible (Briques2d.createpos (0.::0.::[])) (Briques2d.createdim (0.::0.::[]))
+
 let genbriques n bxmin bxmax bymin bymax hmin hmax lmin lmax rptaillescore etatbrique =
    let quadtree = Quadtree.createAndInitialize (bxmax -. bxmin) (bymax -. bymin) (hmin, lmin) briquenulle in
    let check_param = hmin <= hmax && lmin <= lmax  && n >= 1 && (bxmax -. bxmin) >= lmin && (bymax -. bymin) >= hmin in
-   
+
       if not check_param then failwith "paramètres non valides" else
          let liste = genrandombrique n [] hmax hmin lmax lmin bxmin bxmax bymin bymax rptaillescore etatbrique in
          insert_quadtree liste quadtree
 
 
-let%test "Terminaison" = 
+let%test "Terminaison" =
    let _ = genbriques 100 0. 100. 0. 100. 1. 10. 1. 10. 1 Cassable in
    true
 

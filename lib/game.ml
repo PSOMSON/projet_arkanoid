@@ -6,12 +6,13 @@ open Iterator
 
 module EnvMotion :  Env =
     struct
-        type world
-        let bords = 10. , 590. , 790
+        type box = float * float * float
+        let bords = 10. , 790. , 590.
         let dt = 1000./.60.
         let contact = fun _ _ -> false
         let rebond = fun p _ -> p
     end
+
 module MotionArkanoid =
     Motion(EnvMotion)
 
@@ -55,11 +56,31 @@ let game_initialize infx infy supx supy nb_briques_x nb_briques_y score_total : 
     print_string "Game initialized !";
     (qtree, raquette, balle, bric_list)
 
-let game_step etat_flux =
-    let (qtree, raquette, balle, bric_list) = match etat_flux with
-                        | Some (qtree, raquette, balle, bric_list) -> (qtree, raquette, balle, bric_list)
-                        | None -> failwith "Erreur : etat_flux vide"
+let game_step etat infx supx dt =
+    let (qtree, raquette, balle, bric_list) = etat
     in
-    let (pos, vit), r = balle in
-    let (pos', vit') = MotionArkanoid.run (pos, vit) in
-    let balle' = (pos', vit'), r in
+    let (posb, vitb), r = balle in
+    let (posb', vitb') = MotionArkanoid.run r (posb, vitb) in
+    let ((xr, yr), _), (w, h) = raquette in
+    let posr' = Raquette.get_pos_raq infx supx w yr in
+    let (vxr', vyr') = MotionArkanoid.derivate dt (xr, yr) posr' in
+    let raquette' = (posr', (vxr', vyr')), (w, h) in
+    let brique = isOccupied qtree posb' in
+    let qtree' = match brique with
+                | None -> qtree
+                | Some {position=_; value=b} -> Briques.remove_quadtree qtree b
+    in
+    let bric_list' = match brique with
+                | None -> bric_list
+                | Some {position=_; value=b} -> List.filter (fun x -> x <> b) bric_list
+    in
+    let trucb'' = match brique with
+                | None -> MotionArkanoid.collision r (posb', vitb') (posr', (vxr', vyr')) (w, h)
+
+                | Some {position=p; value=b} -> match Briques2d.getdim (Briques2d.getdimension b) with
+                                                | [w;h] -> MotionArkanoid.collision r (posb', vitb') (p,(0.,0.)) (w,h)
+                                                | _ -> failwith "Erreur dimension brique"
+
+    in
+    let balle'' = r, (trucb'', (posb', vitb')) in
+    (qtree', raquette', balle'', bric_list')
