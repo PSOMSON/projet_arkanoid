@@ -124,11 +124,11 @@ let find_position bxmin bxmax bymin bymax h l liste =
       |[] -> failwith "liste vide"
       |b::[] -> let feuille = {position = recreate_floats (Briques2d.getposition b); value = b} in
          Printf.printf "J'insère la dernière brique\n";
-         Quadtree.insert ptitree feuille
+         Quadtree.insertOnInitializedTree ptitree feuille
 
       |b::q -> let feuille = {position = recreate_floats (Briques2d.getposition b); value = b} in
          Printf.printf "J'insère une brique\n";
-         let newquadtree = Quadtree.insert ptitree feuille in
+         let newquadtree = Quadtree.insertOnInitializedTree ptitree feuille in
          insert_quadtree q newquadtree
 
    let rec genrandombrique : int -> Briques2d.briques -> float -> float -> float -> float -> float -> float -> float -> float -> int -> etat -> Briques2d.briques = fun n liste hmax hmin lmax lmin bxmax bxmin bymax bymin rptaillescore etatbrique->
@@ -146,7 +146,8 @@ let find_position bxmin bxmax bymin bymax h l liste =
    
    
    let genbriques n bxmin bxmax bymin bymax hmin hmax lmin lmax rptaillescore etatbrique =
-      let quadtree = Quadtree.create (bxmax -. bxmin) (bymax -. bymin) (hmin, lmin) in
+      let briquenulle = Briques2d.createbrique 0 Invisible (Briques2d.createpos (0.::0.::[])) (Briques2d.createdim (0.::0.::[])) in
+      let quadtree = Quadtree.createAndInitialize (bxmax -. bxmin) (bymax -. bymin) (hmin, lmin) briquenulle in
       let check_param = hmin <= hmax && lmin <= lmax  && n >= 1 && (bxmax -. bxmin) >= lmin && (bymax -. bymin) >= hmin in
       
          if not check_param then failwith "paramètres non valides" else
@@ -170,6 +171,6 @@ let%test "test génération d'une brique" =
 *)
 
 let%test "Terminaison" = 
-   let _ = genbriques 4 0. 100. 0. 100. 1. 10. 1. 10. 1 Cassable in
+   let _ = genbriques 100 0. 100. 0. 100. 1. 10. 1. 10. 1 Cassable in
    true
 
