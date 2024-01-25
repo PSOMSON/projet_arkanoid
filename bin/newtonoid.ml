@@ -29,7 +29,7 @@ let draw_state (etat: state) =
     Graphics.set_color Graphics.green;
     Graphics.fill_rect 0 0 800 600;
 
-    let _, raquette, balle, bric_list = etat in
+    let _, (raquette, _), balle, bric_list = etat in
     let (pos_balle,_), r = balle in
     let pos_raquette, _ = Raquette.get_floats_pos raquette in
     let (w,h) = Raquette.get_floats_dim raquette in

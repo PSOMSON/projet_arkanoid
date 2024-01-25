@@ -1,12 +1,12 @@
 open Iterator
 open Quadtree
 open Briques
-let g = -9.81
+let g = -90.81
 
 
 type vector2 = float*float (*seras implémenté plus en détail plus tard *)
 
-let croissance = 0.003
+let croissance = 1.01
 
 type position = vector2 * vector2
 type taille = float*float
@@ -59,21 +59,28 @@ struct
     (* ça renvoie un angle bizarre selon l'angle de la balle, voire rapport *)
     let collision : float -> position -> position -> float*float -> position =
         fun r ((px, py), (vx, vy)) ((cx, cy), (cvx, cvy))(w,h) ->
-            let (bx, by, tx, ty) = (cx -. w /. 2., cy -. h /. 2., cx +. w /. 2., cy +. h /. 2.)
-            in let (dx, dy) = ((px -. bx), (py -. tx))
-            in let (rl, rr) = dx /. r *. (sign vx), dx /. r *. (sign vx)
-            in let ((a,b),(c,d)) = if px +. r >= bx && py -. r <= ty && px -. r <= tx then
-                if rl -. 1. <= -0.1 && rl +. 1. >= 0.1 then
-                    let v' = Float.(cos (asin rl) *. (vx +. 0.3 *. cvx), -. sin (asin rl) *. (vy +. 0.3 *. cvy))
-                    in ((px, py), v')
-                else if rr -. 1. <= -0.1 && rr +. 1. >= 0.1 then
-                    let v' = Float.(cos (asin rr) *. (vx +. 0.3 *. cvx) , -. sin (asin rr) *. (vy +. 0.3 *. cvy))
-                    in ((px, py), v')
-                else if Float.abs (rl -. 1.) < 0.1 then ((px, py), (-. vx +. cvx, vy +. cvy))
-                else if Float.abs (rr -. 1.) < 0.1 then ((px, py), (-. vx +. cvx, vy +. cvy))
-                else ((px, py), (vx +. 0.3*. cvx, -. vy +. 0.3*. cvy))
-            else ((px, py), (vx, vy))
-            in ((a,b),(c*.croissance,d*.croissance))
+            let (bx, _, tx, ty) = (cx -. w /. 2., cy -. h /. 2., cx +. w /. 2., cy +. h /. 2.)
+            in let (dlx, drx) = ((px -. bx), (px -. tx))
+            in let (rl, rr) = dlx /. r *. (sign vx), drx /. r *. (sign vx)
+            in if dlx >= -. r && py -. r <= ty && drx <= -. r then
+                let ((a,b),(c,d)) =
+                    if rl -. 1. <= 0.01 && rl +. 1. >= -0.01 then
+                        let v' = Float.(sin (asin rl) *. (vx +. 0.3 *. cvx), -. cos (asin rl) *. (vy +. 0.3 *. cvy))
+                        in print_string ("Vitesse left : " ^ string_of_float (fst v') ^ " " ^ string_of_float (snd v') ^ "\n");
+                        ((px, py), v')
+                    else if rr -. 1. <= -0.01 && rr +. 1. >= 0.01 then
+                        let v' = Float.(sin (asin rr) *. (vx +. 0.3 *. cvx) , -. cos (asin rr) *. (vy +. 0.3 *. cvy))
+                        in print_string ("Vitesse right : " ^ string_of_float (fst v') ^ " " ^ string_of_float (snd v') ^ "\n");
+                        ((px, py), v')
+                    else if Float.abs (rl -. 1.) < 0.01 then (print_string "left\n";
+                        ((px, py), (-. vx *. (sign vx) +. cvx, vy +. cvy)))
+                    else if Float.abs (rr -. 1.) < 0.01 then (print_string "right\n";
+                        ((px, py), (vx *. (sign vx) +. cvx, vy +. cvy)))
+                    else (print_string "middle\n";
+                        print_string ("cvx : " ^ string_of_float cvx ^ "\n");
+                        ((px, py), (vx +. 3. *. cvx, -. vy)))
+                in ((a,b),(c*.croissance,d*.croissance))
+            else (print_string "no collision\n"; ((px, py), (vx, vy)))
 
 
 

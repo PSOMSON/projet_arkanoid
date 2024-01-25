@@ -51,7 +51,7 @@ let get_floats_dim : Raquette2d.raquette -> float*float = fun r ->
   let y = List.hd (List.tl (Raquette2d.getdim r)) in
   (x,y)
 
-let create_raquette_autom : float -> float -> float -> float -> Raquette2d.raquette =
+let create_raquette_autom : float -> float -> float -> float -> Raquette2d.raquette * (float*bool) flux =
   fun box_xmax box_xmin box_ymax box_ymin ->
     let dimx = 80. in
     let dimy = 20. in
@@ -59,17 +59,18 @@ let create_raquette_autom : float -> float -> float -> float -> Raquette2d.raque
     let posy = 5. +. dimy/.2. in
     let pos = Raquette2d.create_pos ([posx;posy],[0.;0.]) in
     let dim = Raquette2d.create_dim [dimx;dimy] in
-    Raquette2d.create_raquette pos dim
+    (Raquette2d.create_raquette pos dim), (Input.mouse)
 
 let%test "Création de brique" =
     let _ = create_raquette_autom 100. 0. 100. 0. in
     true
 
-let get_pos_raq : float -> float -> float -> float -> (float*float) = fun bxmax bxmin lraq y ->
-  let flux_souris = Input.mouse in
-  let return = Flux.uncons flux_souris in
-  match return with
-  | Some((x,_),_) ->     if x > bxmax then (bxmax -. lraq/.2.,y)
-    else if x < bxmin then (bxmin +. lraq/.2.,y)
-    else (x,y)
-  | None -> failwith "Erreur récupération position de la souris"
+let get_pos_raq : float*float -> float -> float -> float -> (float*bool) flux -> (float*float) * (float*bool) flux = fun (x,y) bxmax bxmin lraq flux->
+  let return = Flux.uncons flux in
+    match return with
+    | Some ((x',b), t) -> if b then
+                        (if x' > bxmax then (bxmax -. lraq/.2.,y), t
+                        else if x' < bxmin then (bxmin +. lraq/.2.,y), t
+                        else (x',y), t)
+            else (x,y),t
+    | None -> failwith "Erreur récupération position de la souris"

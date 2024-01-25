@@ -24,7 +24,7 @@ let game_hello () = print_endline "Hello, Newtonoiders!"
 (* Temporary before we know what to do with it *)
 type position = vector2 * vector2
 type t_balle = position * int
-type t_raquette = Raquette2d.raquette
+type t_raquette = Raquette2d.raquette * (float * bool) flux
 type state = Briques2d.brique qtree * t_raquette * t_balle * Briques2d.brique list
 
 (* Beaucoup de mots pour faire une grille en m*n avec une brique entre chaque brique
@@ -50,7 +50,7 @@ let populate_brics infx infy supx supy nb_briques_x nb_briques_y score_total=
     (* Encore incomplet, utilise la fonction ci-dessus, et prend des valeurs initiales temporaires*)
 let game_initialize infx infy supx supy nb_briques_x nb_briques_y score_total : state =
     let qtree, bric_list = populate_brics infx infy supx supy nb_briques_x nb_briques_y  score_total in
-    let raquette = Raquette.create_raquette_autom supx infx supy infy in
+    let raquette: t_raquette = Raquette.create_raquette_autom supx infx supy infy in
     let position_init = (supx +. infx) /. 2., (supy +. infy) /. 2. in
     let vitesse_init = (0., 0.) in
     let balle = ((position_init, vitesse_init),  10) in (* On démarre à la moitié de l'écran, à gérer plus tard*)
@@ -62,14 +62,14 @@ let game_step infx supx dt (etat:state) : state =
     let (posb, vitb), r = balle in
     let r' = float_of_int r in
     let (posb', vitb') = MotionArkanoid.run r' (posb, vitb) in
-    let raq = raquette in
+    let (raq, flux) = raquette in
     let ((xr, yr), _) = Raquette.get_floats_pos raq in
     let (w,h) = Raquette.get_floats_dim raq in
-    let posr' = Raquette.get_pos_raq supx infx w yr in
+    let posr', flux' = Raquette.get_pos_raq (xr, yr) supx infx w flux in
     let (vxr', vyr') = MotionArkanoid.derivate dt (xr, yr) posr' in
-    print_string ("Raquette : position = " ^ string_of_float xr ^ " " ^ string_of_float yr ^ " " ^ "vitesse = " ^ string_of_float vxr' ^ " " ^ string_of_float vyr' ^ "\n");
+            print_string ("Raquette : vitesse = " ^ string_of_float vxr' ^ " " ^ string_of_float vyr' ^ "\n");
 
-    let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; yr], [vxr'; vyr'])) (create_dim [w; h])) in
+    let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; yr], [vxr'; vyr'])) (create_dim [w; h])), flux' in
     let balle' = ((posb', vitb'), r) in
     let final : state = (qtree, raquette', balle', bric_list)
     in final
@@ -86,17 +86,17 @@ let en_collision_brique  : Briques2d.brique qtree -> t_balle -> bool =
     brique_collision
 
 let en_collision_raquette : t_raquette -> t_balle -> bool =
-    fun raquette ((posb, _), r) ->
+    fun (raquette, _) ((posb, _), r) ->
     let ((xr, yr), _) = Raquette.get_floats_pos raquette in
     let (w, h) = Raquette.get_floats_dim raquette in
     let (xb, yb) = posb in
-    let (botx, topx, topy) = (xr -. w /. 2., xr +. w /. 2., yr +. h /. 2.) in
+    let (botx, topx, topy, boty) = (xr -. w /. 2., xr +. w /. 2., yr +. h /. 2., yr -. h /. 2.) in
     let (dtl, dtr) = (sqrt ((xb -. botx) ** 2. +. (yb -. topy) ** 2.), sqrt ((xb -. topx) ** 2. +. (yb -. topy) ** 2.)) in
     if Float.abs (dtl -. float_of_int r) <= 0.1 || Float.abs (dtr -. float_of_int r) <= 0.1
         then true
         else
             let (dxg, dxd, dy) = xb -. botx, xb -. topx, yb -. topy in
-            (Float.abs dxg <= 0.1 && dy <= 0.) || (Float.abs dxd <= 0.1 && dy <= 0.1) || (dxg >= 0. && dxd <= 0.)
+            (Float.abs dxg <= 0.1 && dy <= 0.) || (Float.abs dxd <= 0.1 && dy <= 0.1) || (dxg >= 0. && dxd <= 0. && Float.abs (dy -. float_of_int r) <= boty)
 
 let rebond infx supx dt (etat :state): state =
     let (qtree, raquette, balle, bric_list) = etat
@@ -104,16 +104,16 @@ let rebond infx supx dt (etat :state): state =
     let (posb, vitb), r = balle in
     let r' = float_of_int r in
     let (posb', vitb') = MotionArkanoid.run r' (posb, vitb) in
-    let raq = raquette in
+    let (raq, flux) = raquette in
     let ((xr, yr), _) = Raquette.get_floats_pos raq in
     let (w,h) = Raquette.get_floats_dim raq in
-    let posr' = Raquette.get_pos_raq supx infx w yr in
+    let posr', flux' = Raquette.get_pos_raq (xr, yr) supx infx w flux in
     let (vxr', vyr') = MotionArkanoid.derivate dt (xr, yr) posr' in
-    let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; snd posr'], [vxr'; vyr'])) (create_dim [w; h])) in
+    let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; snd posr'], [vxr'; vyr'])) (create_dim [w; h])), flux' in
     let brique = isOccupied qtree posb' in
     let qtree' : Briques2d.brique qtree = match brique with
                 | None -> qtree
-                | Some {position=_; value=b} -> Briques.remove_quadtree qtree b
+                | Some {position=_; value=b} -> if Briques2d.est_cassable b then Briques.remove_quadtree qtree b else qtree
     in
     let bric_list' : Briques2d.brique list= match brique with
                 | None -> bric_list
@@ -121,10 +121,12 @@ let rebond infx supx dt (etat :state): state =
     in
     let trucb'' : position = match brique with
                 | None -> MotionArkanoid.collision r' (posb', vitb') (posr', (vxr', vyr')) (w, h)
+                | Some {position=p; value=b} -> if Briques2d.est_cassable b then
+                                                    match Briques2d.getdim (Briques2d.getdimension b) with
+                                                    | [wb;hb] -> MotionArkanoid.collision r' (posb', vitb') (p,(0.,0.)) (wb,hb)
+                                                    | _ -> failwith "Erreur dimension brique"
+                else MotionArkanoid.collision r' (posb', vitb') (posr', (vxr', vyr')) (w, h)
 
-                | Some {position=p; value=b} -> match Briques2d.getdim (Briques2d.getdimension b) with
-                                                | [w;h] -> MotionArkanoid.collision r' (posb', vitb') (p,(0.,0.)) (w,h)
-                                                | _ -> failwith "Erreur dimension brique"
     in
     let balle'' : t_balle = trucb'', r in
     let final : state = (qtree', raquette', balle'', bric_list')
@@ -136,6 +138,7 @@ let game_end balle =
 
 
 
+
 let game_flux infx supx dt etat_initial : state flux =
     let fonction = game_step infx supx dt in
     let rec acc =
@@ -143,10 +146,11 @@ let game_flux infx supx dt etat_initial : state flux =
     in
     acc
 
-let run_game infx supx dt etat_initial : state flux =
+let run_game infx supx dt (etat_initial :state) : state flux =
     let fonction = rebond infx supx dt in
     let rec run : state -> state flux =
         fun etat ->
+    let (qtree, raquette, balle, bric_list) = etat in
             let flux = game_flux infx supx dt etat in
             let f = Flux.unless flux
             (fun (q, r, b, _) -> en_collision_brique q b || en_collision_raquette r b)
