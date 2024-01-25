@@ -40,10 +40,10 @@ end
 
 let get_floats_pos : Raquette2d.raquette -> (float*float)*(float*float) = fun r ->
   let (pos, vit) = Raquette2d.getpos r in
-  let x = List.hd (List.tl (pos)) in
-  let y = List.hd (pos) in
-  let vx = List.hd (List.tl (vit)) in
-  let vy = List.hd (vit) in
+  let y = List.hd (List.tl (pos)) in
+  let x = List.hd (pos) in
+  let vy = List.hd (List.tl (vit)) in
+  let vx = List.hd (vit) in
   (x,y), (vx, vy)
 
 let get_floats_dim : Raquette2d.raquette -> float*float = fun r ->
@@ -58,8 +58,6 @@ let create_raquette_autom : float -> float -> float -> float -> Raquette2d.raque
     let posx =  (box_xmax +. box_xmin) /. 2. in
     let posy = 5. +. dimy/.2. in
     let pos = Raquette2d.create_pos ([posx;posy],[0.;0.]) in
-    Printf.printf "La raquette aura pour position = (%f,%f)\n" posx posy;
-    Printf.printf "La raquette aura pour dimension = (%f,%f)\n" dimx dimy;
     let dim = Raquette2d.create_dim [dimx;dimy] in
     Raquette2d.create_raquette pos dim
 
@@ -71,8 +69,7 @@ let get_pos_raq : float -> float -> float -> float -> (float*float) = fun bxmax 
   let flux_souris = Input.mouse in
   let return = Flux.uncons flux_souris in
   match return with
-  | Some((x,_),_) -> Printf.printf "Je suis à la position %f" x;
-    if x > bxmax then (bxmax -. lraq/.2.,y)
+  | Some((x,_),_) ->     if x > bxmax then (bxmax -. lraq/.2.,y)
     else if x < bxmin then (bxmin +. lraq/.2.,y)
     else (x,y)
   | None -> failwith "Erreur récupération position de la souris"

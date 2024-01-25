@@ -8,7 +8,7 @@ module EnvMotion :  Env =
     struct
         type box = float * float * float
         let bords = 10. , 790. , 590.
-        let dt = 1000./.60.
+        let dt = 1./.60.
         let contact = fun _ _ -> false
         let rebond = fun p _ -> p
     end
@@ -49,13 +49,11 @@ let populate_brics infx infy supx supy nb_briques_x nb_briques_y score_total=
 
     (* Encore incomplet, utilise la fonction ci-dessus, et prend des valeurs initiales temporaires*)
 let game_initialize infx infy supx supy nb_briques_x nb_briques_y score_total : state =
-    print_string "Initializing game \n";
     let qtree, bric_list = populate_brics infx infy supx supy nb_briques_x nb_briques_y  score_total in
     let raquette = Raquette.create_raquette_autom supx infx supy infy in
     let position_init = (supx +. infx) /. 2., (supy +. infy) /. 2. in
     let vitesse_init = (0., 0.) in
     let balle = ((position_init, vitesse_init),  10) in (* On démarre à la moitié de l'écran, à gérer plus tard*)
-    print_string "Game initialized ! \n";
     (qtree, raquette, balle, bric_list)
 
 let game_step infx supx dt (etat:state) : state =
@@ -69,7 +67,9 @@ let game_step infx supx dt (etat:state) : state =
     let (w,h) = Raquette.get_floats_dim raq in
     let posr' = Raquette.get_pos_raq supx infx w yr in
     let (vxr', vyr') = MotionArkanoid.derivate dt (xr, yr) posr' in
-    let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; snd posr'], [vxr'; vyr'])) (create_dim [w; h])) in
+    print_string ("Raquette : position = " ^ string_of_float xr ^ " " ^ string_of_float yr ^ " " ^ "vitesse = " ^ string_of_float vxr' ^ " " ^ string_of_float vyr' ^ "\n");
+
+    let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; yr], [vxr'; vyr'])) (create_dim [w; h])) in
     let balle' = ((posb', vitb'), r) in
     let final : state = (qtree, raquette', balle', bric_list)
     in final
@@ -112,7 +112,7 @@ let rebond infx supx dt (etat :state): state =
     let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; snd posr'], [vxr'; vyr'])) (create_dim [w; h])) in
     let brique = isOccupied qtree posb' in
     let qtree' : Briques2d.brique qtree = match brique with
-                | None -> failwith "Erreur rebond brique"
+                | None -> qtree
                 | Some {position=_; value=b} -> Briques.remove_quadtree qtree b
     in
     let bric_list' : Briques2d.brique list= match brique with
@@ -130,6 +130,10 @@ let rebond infx supx dt (etat :state): state =
     let final : state = (qtree', raquette', balle'', bric_list')
     in final
 
+let game_end balle =
+    let (((_,y), _), _) = balle in
+    y <= 0.
+
 
 
 let game_flux infx supx dt etat_initial : state flux =
@@ -144,8 +148,11 @@ let run_game infx supx dt etat_initial : state flux =
     let rec run : state -> state flux =
         fun etat ->
             let flux = game_flux infx supx dt etat in
-            Flux.unless flux
+            let f = Flux.unless flux
             (fun (q, r, b, _) -> en_collision_brique q b || en_collision_raquette r b)
             (fun x -> run (fonction x))
+            in Flux.unless f
+            (fun (_, _, b, _) -> game_end b)
+            (fun _ -> Tick (lazy(None)))
     in
     run etat_initial
