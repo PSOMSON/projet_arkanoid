@@ -90,7 +90,7 @@ let en_collision_raquette : t_raquette -> t_balle -> bool =
     let ((xr, yr), _) = Raquette.get_floats_pos raquette in
     let (w, h) = Raquette.get_floats_dim raquette in
     let (xb, yb) = posb in
-    let (botx, boty, topx, topy) = (xr -. w /. 2., yr -. h /. 2., xr +. w /. 2., yr +. h /. 2.) in
+    let (botx, topx, topy) = (xr -. w /. 2., xr +. w /. 2., yr +. h /. 2.) in
     let (dtl, dtr) = (sqrt ((xb -. botx) ** 2. +. (yb -. topy) ** 2.), sqrt ((xb -. topx) ** 2. +. (yb -. topy) ** 2.)) in
     if Float.abs (dtl -. float_of_int r) <= 0.1 || Float.abs (dtr -. float_of_int r) <= 0.1
         then true
