@@ -26,12 +26,8 @@ sig
 end
 
 
-let integre dt acc flux =
-  (* fonction auxiliaire de calcul de acc_{i} + dt * flux_{i} *)
-  let iter (acc1, acc2) (flux1, flux2) =
-    (acc1 +. dt *. flux1, acc2 +. dt *. flux2)
-  (* définition récursive du flux acc                         *)
-  in iter acc flux;;
+let integre dt (acc1, acc2) (flux1, flux2) =
+    (acc1 +. (dt *. flux1), acc2 +. (dt *. flux2));;
 
 (*TODO Mise a jour d'etat!! *)
 module Motion (E : Env) =
