@@ -95,8 +95,8 @@ let draw flux_state =
   Graphics.close_graph ()
 
 let () = game_hello ();
-        let nb_bloc_x = 10 in
-        let nb_bloc_y = 5 in
+        let nb_bloc_x = 4 in
+        let nb_bloc_y = 1 in
         let first_state = game_initialize Box.infx Box.infy Box.supx Box.supy nb_bloc_x nb_bloc_y score_total in
         (*draw states*)
         draw (run_game Box.infx Box.supx Init.dt first_state)

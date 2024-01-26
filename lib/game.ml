@@ -38,9 +38,10 @@ let populate_brics infx infy supx supy nb_briques_x nb_briques_y score_total=
     let briquenulle = Briques2d.createbrique 0 Invisible (Briques2d.createpos (0.::0.::[])) (Briques2d.createdim (0.::0.::[])) in
     let qtree = createAndInitialize (supx -. infx) (supy -. infy) (w,h) briquenulle in
     let rec aux qtree x y l =
-        if y >= 2*nb_briques_y then qtree, l
-        else if x >= 2*nb_briques_x then aux qtree 0 (y+2) l
-        else let (xb, yb) = infx' +. (float_of_int x +. 0.5)*.w, infy' +. (float_of_int y +. 0.5)*.h in
+        if y >= 2*nb_briques_y
+            then qtree, l
+            else if x >= 2*nb_briques_x then aux qtree 0 (y+2) l
+            else let (xb, yb) = infx' +. (float_of_int x +. 0.5)*.w, infy' +. (float_of_int y +. 0.5)*.h in
         let pb = Briques2d.createpos [xb; yb] in
         let d = Briques2d.createdim [w;h] in
         let b = Briques2d.createbrique score Briques.Cassable pb d in
@@ -52,7 +53,7 @@ let game_initialize infx infy supx supy nb_briques_x nb_briques_y score_total : 
     let qtree, bric_list = populate_brics infx infy supx supy nb_briques_x nb_briques_y  score_total in
     let raquette: t_raquette = Raquette.create_raquette_autom supx infx supy infy in
     let position_init = (supx +. infx) /. 2., (supy +. infy) /. 2. in
-    let vitesse_init = (0., 0.) in
+    let vitesse_init = (0., -100.) in
     let balle = ((position_init, vitesse_init),  10) in (* On démarre à la moitié de l'écran, à gérer plus tard*)
     (qtree, raquette, balle, bric_list)
 
@@ -81,7 +82,7 @@ let en_collision_brique  : Briques2d.brique qtree -> t_balle -> bool =
     let brique = isOccupied qtree posb in
     let brique_collision = match brique with
                 | None -> false
-                | Some {position=_; value=b} -> Briques2d.est_cassable b
+                | Some {position=_; value=b} -> not (Briques2d.est_invisible b)
     in
     brique_collision
 
@@ -92,7 +93,7 @@ let en_collision_raquette : t_raquette -> t_balle -> bool =
     let (xb, yb) = posb in
     let (botx, topx, topy, boty) = (xr -. w /. 2., xr +. w /. 2., yr +. h /. 2., yr -. h /. 2.) in
     let (dtl, dtr) = (sqrt ((xb -. botx) ** 2. +. (yb -. topy) ** 2.), sqrt ((xb -. topx) ** 2. +. (yb -. topy) ** 2.)) in
-    if Float.abs (dtl -. float_of_int r) <= 0.1 || Float.abs (dtr -. float_of_int r) <= 0.1
+    if dtl -. float_of_int r <= 0.1 || dtr -. float_of_int r <= 0.1
         then true
         else
             let (dxg, dxd, dy) = xb -. botx, xb -. topx, yb -. topy in
@@ -105,10 +106,9 @@ let rebond infx supx dt (etat :state): state =
     let r' = float_of_int r in
     let (posb', vitb') = MotionArkanoid.run r' (posb, vitb) in
     let (raq, flux) = raquette in
-    let ((xr, yr), _) = Raquette.get_floats_pos raq in
+    let ((xr, yr), (vxr', vyr')) = Raquette.get_floats_pos raq in
     let (w,h) = Raquette.get_floats_dim raq in
     let posr', flux' = Raquette.get_pos_raq (xr, yr) supx infx w flux in
-    let (vxr', vyr') = MotionArkanoid.derivate dt (xr, yr) posr' in
     let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; snd posr'], [vxr'; vyr'])) (create_dim [w; h])), flux' in
     let brique = isOccupied qtree posb' in
     let qtree' : Briques2d.brique qtree = match brique with
@@ -121,11 +121,11 @@ let rebond infx supx dt (etat :state): state =
     in
     let trucb'' : position = match brique with
                 | None -> MotionArkanoid.collision r' (posb', vitb') (posr', (vxr', vyr')) (w, h)
-                | Some {position=p; value=b} -> if Briques2d.est_cassable b then
+                | Some {position=p; value=b} -> if not (Briques2d.est_invisible b) then
                                                     match Briques2d.getdim (Briques2d.getdimension b) with
                                                     | [wb;hb] -> MotionArkanoid.collision r' (posb', vitb') (p,(0.,0.)) (wb,hb)
                                                     | _ -> failwith "Erreur dimension brique"
-                else MotionArkanoid.collision r' (posb', vitb') (posr', (vxr', vyr')) (w, h)
+                                                else MotionArkanoid.collision r' (posb', vitb') (posr', (vxr', vyr')) (w, h)
 
     in
     let balle'' : t_balle = trucb'', r in

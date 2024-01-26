@@ -6,7 +6,7 @@ let g = -90.81
 
 type vector2 = float*float (*seras implémenté plus en détail plus tard *)
 
-let croissance = 1.01
+let croissance = 1.1
 
 type position = vector2 * vector2
 type taille = float*float
@@ -52,37 +52,43 @@ struct
       in let (dpx, dpy) = (integre E.dt (px, py) (dvx, dvy))
       in ((dpx, dpy), (rebond_x r dpx dvx, rebond_y r dpy dvy))
 
+    let eject_circle (px, py) (cx, cy) r =
+        let (dirx, diry) = (px -. cx, py -. cy) in
+        let (normx, normy) = (dirx /. (sqrt (dirx ** 2. +. diry ** 2.)), diry /. (sqrt (dirx ** 2. +. diry ** 2.))) in
+        (normx *. r +. cx, normy *. r +. cy)
 
-    let sign x = if x > 0. then 1. else -1.
 
     (* Try reading that lol *)
     (* ça renvoie un angle bizarre selon l'angle de la balle, voire rapport *)
-    let collision : float -> position -> position -> float*float -> position =
-        fun r ((px, py), (vx, vy)) ((cx, cy), (cvx, cvy))(w,h) ->
-            let (bx, _, tx, ty) = (cx -. w /. 2., cy -. h /. 2., cx +. w /. 2., cy +. h /. 2.)
-            in let (dlx, drx) = ((px -. bx), (px -. tx))
-            in let (rl, rr) = dlx /. r *. (sign vx), drx /. r *. (sign vx)
-            in if dlx >= -. r && py -. r <= ty && drx <= -. r then
-                let ((a,b),(c,d)) =
-                    if rl -. 1. <= 0.01 && rl +. 1. >= -0.01 then
-                        let v' = Float.(sin (asin rl) *. (vx +. 0.3 *. cvx), -. cos (asin rl) *. (vy +. 0.3 *. cvy))
-                        in print_string ("Vitesse left : " ^ string_of_float (fst v') ^ " " ^ string_of_float (snd v') ^ "\n");
-                        ((px, py), v')
-                    else if rr -. 1. <= -0.01 && rr +. 1. >= 0.01 then
-                        let v' = Float.(sin (asin rr) *. (vx +. 0.3 *. cvx) , -. cos (asin rr) *. (vy +. 0.3 *. cvy))
-                        in print_string ("Vitesse right : " ^ string_of_float (fst v') ^ " " ^ string_of_float (snd v') ^ "\n");
-                        ((px, py), v')
-                    else if Float.abs (rl -. 1.) < 0.01 then (print_string "left\n";
-                        ((px, py), (-. vx *. (sign vx) +. cvx, vy +. cvy)))
-                    else if Float.abs (rr -. 1.) < 0.01 then (print_string "right\n";
-                        ((px, py), (vx *. (sign vx) +. cvx, vy +. cvy)))
-                    else (print_string "middle\n";
-                        print_string ("cvx : " ^ string_of_float cvx ^ "\n");
-                        ((px, py), (vx +. 3. *. cvx, -. vy)))
-                in ((a,b),(c*.croissance,d*.croissance))
-            else (print_string "no collision\n"; ((px, py), (vx, vy)))
-
-
+    let collision : float -> float -> position -> position -> float*float -> position =
+        fun dt r ((px, py), (vx, vy)) ((cx, cy), (cvx, cvy)) (w,h) ->
+            let (bxr, byr, txr, tyr) = (cx -. r -. w /. 2., cy -. r -. h /. 2. , cx +. r +. w /. 2. , cy +. r +. h /. 2.) in
+            let (bx, by, tx, ty) = (cx -. w /. 2., cy -. h /. 2. , cx +. w /. 2. , cy +. h /. 2.) in
+            let (disttl, disttr, distbl, distbr) = (sqrt ((px -. bxr) ** 2. +. (py -. tyr) ** 2.), sqrt ((px -. txr) ** 2. +. (py -. tyr) ** 2.), sqrt ((px -. bxr) ** 2. +. (py -. byr) ** 2.), sqrt ((px -. txr) ** 2. +. (py -. byr) ** 2.)) in
+            let (dxl, dxr, dyt, dyb) = (px -. bx, px -. tx, py -. ty, py -. by) in
+            let (dxlext, dxrext, dytext, dybext) = (px -. bxr, px -. txr, py -. tyr, py -. byr) in
+            let (left, up) = (px -. cx < 0., py -. cy > 0.) in
+            let (a,b) =
+                if (dxl >= 0. && dxr <= 0. && dytext <= 0. && dybext >= 0.) then
+                    if up then (px,tyr) else (px, byr)
+                else if (dxlext >= 0. && dxrext <= 0. && dyt <= 0. && dyb >= 0.) then
+                    if left then (bxr, py) else (txr, py)
+                else if disttl <= r then
+                    eject_circle (px, py) (bxr, tyr) r
+                else if disttr <= r then
+                    eject_circle (px, py) (txr, tyr) r
+                else if distbl <= r then
+                    eject_circle (px, py) (bxr, byr) r
+                else if distbr <= r then
+                    eject_circle (px, py) (txr, byr) r
+                else
+                    (px, py)
+            in
+            let norm = sqrt (vx ** 2. +. vy ** 2.) *. sqrt (cvx ** 2. +. cvy ** 2.) in
+            let (dxdt, dydt) = (a -. px) /. dt, (b -. py) /. dt in
+            let (vx', vy') = (dxdt *. norm, dydt *. norm) in
+            let prod_scal = vx' *. cvx +. vy' *. cvy in
+            ((a,b), (vx' /. norm *. prod_scal, vy' /. norm *. prod_scal))
 
 let derivate dt acc flux =
     let iter (acc1, acc2) (flux1, flux2) =

@@ -19,6 +19,7 @@ sig
   val getposition : brique -> p
   val est_cassable : brique -> bool
   val est_incassable : brique -> bool
+  val est_invisible : brique -> bool
   val getdimension : brique -> d
   val setdimension : brique -> d -> brique
   val setposition : brique -> p -> brique
@@ -44,6 +45,7 @@ struct
   let getdimension (_,_,_,d) = d
   let est_cassable b = getetat b = Cassable
   let est_incassable b = getetat b = Incassable
+  let est_invisible b = getetat b = Invisible
   let setdimension (s,e,p,_) d = (s,e,p,d)
   let setposition (s,e,_,d) p = (s,e,p,d)
   let setetat (s,_,p,d) e = (s,e,p,d)
