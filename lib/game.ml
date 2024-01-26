@@ -17,7 +17,7 @@ module MotionArkanoid =
     Motion(EnvMotion)
 
 
-
+        let acc = 0.2
 
 let game_hello () = print_endline "Hello, Newtonoiders!"
 
@@ -62,14 +62,14 @@ let game_step infx supx dt (etat:state) : state =
     in
     let (posb, vitb), r = balle in
     let r' = float_of_int r in
-    let (posb', vitb') = MotionArkanoid.run r' (posb, vitb) in
+    let ((x', y'), vitb') = MotionArkanoid.run r' (posb, vitb) in
     let (raq, flux) = raquette in
     let ((xr, yr), _) = Raquette.get_floats_pos raq in
     let (w,h) = Raquette.get_floats_dim raq in
     let posr', flux' = Raquette.get_pos_raq (xr, yr) supx infx w flux in
     let (vxr', vyr') = MotionArkanoid.derivate dt (xr, yr) posr' in
     let raquette' : t_raquette = Raquette2d.(create_raquette (create_pos ([fst posr'; yr], [vxr'; vyr'])) (create_dim [w; h])), flux' in
-    let balle' = ((posb', vitb'), r) in
+    let balle' = (((x' +. acc, y' +. acc), vitb'), r) in
     let final : state = (qtree, raquette', balle', bric_list)
     in final
 
@@ -168,7 +168,6 @@ let run_game infx supx dt (etat_initial :state) : state flux =
     let fonction = rebond infx supx dt in
     let rec run : state -> state flux =
         fun etat ->
-    let (qtree, raquette, balle, bric_list) = etat in
             let flux = game_flux infx supx dt etat in
             let f = Flux.unless flux
             (fun (q, r, b, _) -> en_collision_brique q b || en_collision_raquette supx infx r b)
