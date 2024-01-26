@@ -16,32 +16,47 @@
            | Node of 'a qtree * 'a qtree * 'a qtree * 'a qtree
    and 'a qtree = {tree : 'a tree; size : float*float; resol : float*float}
    
-     (*l'arbre est-il vide ?*)
+(*fonction empty : 
+  in : 'a qtree 
+  out : true si l'arbre est vide, false sinon. *)
    val empty : 'a qtree -> bool
    
+(*fonction createAndInitialize :
+  in : longueure (float) largeur (float) résolution (float*float) valeur par défaut 'a
+  out : un arbre 'a qtree initialisé avec des valeurs par défaut 'a*)
    val createAndInitialize : float -> float -> float*float -> 'a -> 'a qtree
    
-     (*création de l'arbre à partir de la taille de la fenêtre*)
-   val create : float -> float -> float*float -> 'a qtree
-   (*permet d'insérer un objet 'a à une position donnée par vector2*)
-   (*bon, on a éssayé de faire que l'arbre s'agrandis à chaque ajout, mais cela pose 
-      d'inéxplicable problèmes de réccursions et on a suffisament perdu de temps comme 
-      ça, on vas partir sur une initialisation de l'arbre l'ors de la création avec des 
-      nulls partout, la "insert" et donc depecated*) 
-   val insert : 'a qtree -> 'a feuille-> 'a qtree
+
+(*fonction insertOnInitializedTree :
+  in : un arbre 'a qtree, une feuille 'a feuille
+  out : un arbre 'a qtree avec la feuille 'a feuille insérée*)
+(* [!] peu importe la position de la feuille, elle sera échelonné selon la résolution de sorte à ce
+   qu'elle soit au centre de la case de la quadtree*)
    
    val insertOnInitializedTree : 'a qtree -> 'a feuille -> 'a qtree
-   
+   (*fonction : remove
+      in : 'a qtree (arbre), (float*float) (position), valeur par défaut
+      out : nouvel arbre*)
    val remove : 'a qtree -> vector2 -> 'a -> 'a qtree
+
+(*fonction : isOccupied
+  in : 'a qtree (arbre), (float*float) (position)
+  out : 'a feuille option (None si la case est vide, Some feuille si elle est occupée)*)
    val isOccupied : 'a qtree -> vector2 -> 'a feuille option
    
-     (*détection de collision entre un objet de vitesse et de position donnée
-        ça renvoie le nouveau vecteur vitesse de l'objet
-        si l'objet ne collisionne pas, le vecteur vitesse est inchangé*)
-     (*de plus, on renvoie le qtree à jour*)
-   val colide : 'a qtree -> float*float -> float*float -> float -> 'a qtree * (float*float)* 'a feuille option 
+(*fonction : colide
+  in : 'a qtree (arbre), (float*float) (position), (float*float) (vitesse), rayon de la balle (float)$
+  out : nouvel arbre, nouvelle vitesse, nouvelle feuille option (None si la case est vide)$
+  *)
+  val colide : 'a qtree -> float*float -> float*float -> float -> 'a qtree * (float*float)* 'a feuille option 
+  
+(*procédure : print :
+in : arbre
+permet d'afficher l'arbre*)
+  val print : 'a qtree -> unit
    
-   val print : 'a qtree -> unit
    
-   
-   
+(*note : initialiser l'arbre avec toutes les valeurs avec des valeurs par défauts peu sembler peu 
+   optimisé par rapport à rajouter au fur et à mesure les branches à chaque insertion
+   en réalité, même si il y avait 1000x1000 briques, l'arbre ne serais que de profondeur log4(1000000) ~= 10 donc 
+   aucun problème.*)
