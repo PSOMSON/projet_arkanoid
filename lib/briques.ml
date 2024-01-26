@@ -10,11 +10,11 @@ type etat = Cassable | Incassable | Invisible
 module type Briques =
 sig
    (*type position*)
-   type p 
+   type p
    (*type dimension*)
-   type d 
+   type d
    (*type brique : tuple d'un score, d'un état, d'une position et de ses dimensions*)
-   type brique = int*etat*p*d 
+   type brique = int*etat*p*d
    (*type briques : liste de briques*)
    type briques = brique list
    (*Renvoie le score associé à la brique*)

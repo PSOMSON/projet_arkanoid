@@ -29,8 +29,9 @@ let draw_state (etat: state) =
     Graphics.set_color Graphics.green;
     Graphics.fill_rect 0 0 800 600;
 
-    let _, (raquette, _), balle, bric_list = etat in
+    let qtree, (raquette, _), balle = etat in
     let (pos_balle,_), r = balle in
+    let r' = float_of_int r in
     let pos_raquette, _ = Raquette.get_floats_pos raquette in
     let (w,h) = Raquette.get_floats_dim raquette in
 
@@ -46,7 +47,7 @@ let draw_state (etat: state) =
     let rec draw_brics l =
         match l with
         | [] -> ()
-        | b::q -> let pos = Briques.Briques2d.getposition b in
+        | {Quadtree.position = _ ; Quadtree.value = b}::q -> let pos = Briques.Briques2d.getposition b in
         let (x,y) = match Briques.Briques2d.getpos pos with
         | x::[y] -> (x,y)
         | _ -> failwith "Erreur de position de brique" in
@@ -54,24 +55,25 @@ let draw_state (etat: state) =
         let (w,h) = match Briques.Briques2d.getdim dim with
         | w::[h] -> (w,h)
         | _ -> failwith "Erreur de dimension de brique" in
-        let x1, x2 = int_of_float (x -. w/.2.), int_of_float (x +. w/.2.) in
-        let y1, y2 = int_of_float (y -. h/.2.), int_of_float (y +. h/.2.) in
+        let x1, x2 = int_of_float (x -. w/.2. +. r'), int_of_float (x +. w/.2. -. r') in
+        let y1, y2 = int_of_float (y -. h/.2. +. r'), int_of_float (y +. h/.2. -. r') in
         Graphics.set_color Graphics.red;
         Graphics.fill_rect x1 y1 (x2-x1) (y2-y1);
         Graphics.set_color Graphics.black;
         Graphics.draw_rect x1 y1 (x2-x1) (y2-y1);
         draw_brics q
     in
-    draw_brics bric_list
+    draw_brics (Quadtree.parcour qtree)
 
 
 (* extrait le score courant d'un etat : *)
-let score (_, _, _, bric_list) : int =
+let score (qtree, _, _) : int =
+    let briques = Quadtree.parcour qtree in
     let rec remaining_score l =
         match l with
         | [] -> 0
-        | h::t -> if Briques.Briques2d.getetat h = Briques.Cassable then (Briques.Briques2d.getscore h) + (remaining_score t) else remaining_score t
-    in score_total - (remaining_score bric_list)
+        | {Quadtree.position = _; Quadtree.value = h}::t -> if Briques.Briques2d.getetat h = Briques.Cassable then (Briques.Briques2d.getscore h) + (remaining_score t) else remaining_score t
+    in score_total - (remaining_score briques)
 
 
 let draw flux_state =
@@ -94,8 +96,8 @@ let draw flux_state =
   Graphics.close_graph ()
 
 let () = game_hello ();
-        let nb_bloc_x = 15 in
-        let nb_bloc_y = 4 in
+        let nb_bloc_x = 4 in
+        let nb_bloc_y = 1 in
         let first_state = game_initialize Box.infx Box.infy Box.supx Box.supy nb_bloc_x nb_bloc_y score_total in
         (*draw states*)
         draw (run_game Box.infx Box.supx Init.dt first_state)

@@ -26,45 +26,61 @@ let game_hello () = print_endline "Hello, Newtonoiders!"
 type position = vector2 * vector2
 type t_balle = position * int
 type t_raquette = Raquette2d.raquette * (float * bool) flux
-type state = Briques2d.brique qtree * t_raquette * t_balle * Briques2d.brique list
+type state = Briques2d.brique qtree * t_raquette * t_balle
+
+let approx (xa,ya) (xb,yb) (w,h) : bool =
+    let (dx, dy) = xb -. xa, yb -. ya in
+    Float.(abs dx < w && abs dy < h)
+
+let rec find (x,y) (l : Briques2d.brique feuille list) (w,h) =
+    match l with
+    | [] -> None
+    | {position = p; value = b}::q ->
+               if approx p (x,y) (w,h) then Some p else find (x,y) q (w,h)
 
 (* Beaucoup de mots pour faire une grille en m*n avec une brique entre chaque brique
  horizontalement et verticalement*)
 let populate_brics r infx infy supx supy nb_briques_x nb_briques_y score_total=
-    let infx', supx' = 2.*.infx, supx -. infx in
-    let infy', supy' = 2.*.supy/.3. +. infy, supy -. infy in
-    let hr = Float.trunc ((supy' -. infy') /. (2.*.float_of_int nb_briques_y -.1.)) in
+    let infx', supx' = 5.*.infx, supx -. 5.*.infx in
+    let infy', supy' = 2.*.supy/.4. +. infy, 3./.4. *.supy in
+    let hr = Float.trunc ((supy' -. infy') /. float_of_int nb_briques_y) in
     let wr = Float.trunc ((supx' -. infx') /. float_of_int nb_briques_x) in
-    let (w,h) = wr -. 2.*.r, hr -. 2.*.r in
+    let (w,h) = wr -. 2. *. r, hr -. 2. *. r in
+    print_string "w = "; print_float w; print_string " h = "; print_float h; print_newline();
     if w <= 1. || h <= 1. then failwith "Too many bricks";
     let score = score_total / (nb_briques_x * nb_briques_y) in
     let briquenulle = Briques2d.createbrique 0 Invisible (Briques2d.createpos (0.::0.::[])) (Briques2d.createdim (0.::0.::[])) in
     let qtree = createAndInitialize (supx -. infx) (supy -. infy) (wr,hr) briquenulle in
-    let rec aux qtree x y l =
-        if y >= 2*nb_briques_y
-            then qtree, l
+    let lbriques = parcour qtree in
+    let rec aux qtree x y =
+        if y >= nb_briques_y
+            then qtree
         else if x >= nb_briques_x
-            then aux qtree 0 (y+2) l
+            then aux qtree 0 (y+1)
         else
             let (xb, yb) = infx' +. (float_of_int x +. 0.5)*.wr, infy' +. (float_of_int y +. 0.5)*.hr in
             let pb = Briques2d.createpos [xb; yb] in
             let d = Briques2d.createdim [w;h] in
             let b = Briques2d.createbrique score Briques.Cassable pb d in
-            aux (insertOnInitializedTree qtree {position = (xb, yb); value = b}) (x+1) y (b::l)
-    in aux qtree 0 0 []
+            match find (xb,yb) lbriques (wr,hr) with
+            | None -> failwith "Brique non trouvée"
+            | Some (xb,yb) ->
+                print_string ("pos : x = " ^ string_of_float (xb+.w) ^ " y = " ^ string_of_float (yb+.h) ^ "\n");
+                    aux (Quadtree.insertOnInitializedTree qtree {position = (xb, yb) ; value = b}) (x+1) y
+    in aux qtree 0 0
 
     (* Encore incomplet, utilise la fonction ci-dessus, et prend des valeurs initiales temporaires*)
 let game_initialize infx infy supx supy nb_briques_x nb_briques_y score_total : state =
     let r = 4 in
-    let qtree, bric_list = populate_brics (float_of_int r) infx infy supx supy nb_briques_x nb_briques_y  score_total in
+    let qtree = populate_brics (float_of_int r) infx infy supx supy nb_briques_x nb_briques_y  score_total in
     let raquette: t_raquette = Raquette.create_raquette_autom supx infx supy infy in
     let position_init = (supx +. infx) /. 2., (supy +. infy) /. 2. in
     let vitesse_init = (0., -100.) in
     let balle = ((position_init, vitesse_init),  r) in (* On démarre à la moitié de l'écran, à gérer plus tard*)
-    (qtree, raquette, balle, bric_list)
+    (qtree, raquette, balle)
 
 let game_step infx supx dt (etat:state) : state =
-    let (qtree, raquette, balle, bric_list) = etat
+    let (qtree, raquette, balle) = etat
     in
     let (posb, vitb), r = balle in
     let r' = float_of_int r in
@@ -78,7 +94,7 @@ let game_step infx supx dt (etat:state) : state =
     let norm_vitb = sqrt (vx ** 2. +. vy ** 2.) in
     let vitb'' = vx +. vx /. norm_vitb *. acc, vy +. vy /. norm_vitb *. acc in
     let balle' = ((posb', vitb''), r) in
-    let final : state = (qtree, raquette', balle', bric_list)
+    let final : state = (qtree, raquette', balle')
     in final
 
 
@@ -126,7 +142,7 @@ let en_collision_raquette : float -> float -> t_raquette -> t_balle -> bool =
     en_collision_rectangle (posr', (w,h)) ((posb', vitb'), r)
 
 let rebond infx supx dt (etat :state): state =
-    let (qtree, raquette, balle, bric_list) = etat
+    let (qtree, raquette, balle) = etat
     in
     let (posb, vitb), r = balle in
     let r' = float_of_int r in
@@ -140,10 +156,6 @@ let rebond infx supx dt (etat :state): state =
     let qtree' : Briques2d.brique qtree = match brique with
                 | None -> qtree
                 | Some {position=_; value=b} -> if Briques2d.est_cassable b then Briques.remove_quadtree qtree b else qtree
-    in
-    let bric_list' : Briques2d.brique list= match brique with
-                | None -> bric_list
-                | Some {position=_; value=b} -> List.filter (fun x -> x <> b) bric_list
     in
     let trucb'' : position = match brique with
                 | None -> MotionArkanoid.collision dt r' (posb', vitb') (posr', (vxr', vyr')) (w, h) true
@@ -162,7 +174,7 @@ let rebond infx supx dt (etat :state): state =
     let norm_vitb = sqrt (vx ** 2. +. vy ** 2.) in
     let vitb'' = vx +. vx /. norm_vitb *. acc, vy +. vy /. norm_vitb *. acc in
     let balle'' : t_balle = (pos'', vitb''), r in
-    let final : state = (qtree', raquette', balle'', bric_list')
+    let final : state = (qtree', raquette', balle'')
     in final
 
 let game_end balle =
@@ -185,10 +197,10 @@ let run_game infx supx dt (etat_initial :state) : state flux =
         fun etat ->
             let flux = game_flux infx supx dt etat in
             let f = Flux.unless flux
-            (fun (q, r, b, _) -> en_collision_brique q b || en_collision_raquette supx infx r b)
+            (fun (q, r, b) -> en_collision_brique q b || en_collision_raquette supx infx r b)
             (fun x -> run (fonction x))
             in Flux.unless f
-            (fun (_, _, b, _) -> game_end b)
+            (fun (_, _, b) -> game_end b)
             (fun _ -> Tick (lazy(None)))
     in
     run etat_initial
