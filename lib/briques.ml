@@ -1,36 +1,56 @@
 open Quadtree
 
-(*Etat Solide : la brique peut être cassée mais ne l'a pas encore été
-   Etat Incassable : la brique ne peut pas être cassée
-   Etat Invisible : la brique a été solide et a été cassée/n'est plus un obstacle pour la balle*)
+(* Etat cassable : la brique est visible par l'utilisateur et peut être cassée pour augmenter son score
+   * Etat incassable : la brique est visible par l'utilisateur mais ne peut pas être cassée
+   * Etat invisible : la brique n'est pas visible par l'utilisateur et a été cassée
+   *)
 
-(*note : on stoque la position de chaque brique comme étant la position de
-   leur coin inférieur gauche !*)
 type etat = Cassable | Incassable | Invisible
 
 module type Briques =
 sig
-  type p (*type position*)
-  type d (*type dimension*)
-  type brique = int*etat*p*d (*type brique : tuple d'un score, d'un état, d'une position et de ses dimensions*)
-  type briques = brique list
-  val getscore : brique -> int
-  val getetat : brique -> etat
-  val getposition : brique -> p
-  val est_cassable : brique -> bool
-  val est_incassable : brique -> bool
-  val est_invisible : brique -> bool
-  val getdimension : brique -> d
-  val setdimension : brique -> d -> brique
-  val setposition : brique -> p -> brique
-  val setetat : brique -> etat -> brique
-  val setscore : brique -> int -> brique
-  val createbrique : int -> etat -> p -> d -> brique
-  val setbrique : brique -> int -> etat -> p -> d -> brique
-  val createdim : float list -> d
-  val createpos : float list -> p
-  val getdim : d -> float list
-  val getpos : p -> float list
+   (*type position*)
+   type p 
+   (*type dimension*)
+   type d 
+   (*type brique : tuple d'un score, d'un état, d'une position et de ses dimensions*)
+   type brique = int*etat*p*d 
+   (*type briques : liste de briques*)
+   type briques = brique list
+   (*Renvoie le score associé à la brique*)
+   val getscore : brique -> int
+   (*Renvoie l'état de la brique*)
+   val getetat : brique -> etat
+   (*Renvoie la position de la brique*)
+   val getposition : brique -> p
+   (*Renvoie si la brique est cassable*)
+   val est_cassable : brique -> bool
+   (*Renvoie si la brique est incassable*)
+   val est_incassable : brique -> bool
+   (*Renvoie si la brique est invisible*)
+   val est_invisible : brique -> bool
+   (*Renvoie les dimensions de la brique*)
+   val getdimension : brique -> d
+   (*Modifie les dimensions de la brique*)
+   val setdimension : brique -> d -> brique
+   (*Modifie la position de la brique*)
+   val setposition : brique -> p -> brique
+   (*Modifie l'état de la brique*)
+   val setetat : brique -> etat -> brique
+   (*Modifie le score de la brique*)
+   val setscore : brique -> int -> brique
+   (*Crée une brique*)
+   val createbrique : int -> etat -> p -> d -> brique
+   (*Modifie une brique*)
+   val setbrique : brique -> int -> etat -> p -> d -> brique
+   (*Crée une dimension*)
+   val createdim : float list -> d
+   (*Crée une position*)
+   val createpos : float list -> p
+   (*Renvoie les dimensions de la brique*)
+   val getdim : d -> float list
+   (*Renvoie la position de la brique*)
+   val getpos : p -> float list
 end
 
 module Briques2d : Briques =
@@ -52,7 +72,7 @@ struct
   let setscore (_,e,p,d) s = (s,e,p,d)
   let createbrique s e p d = (s,e,p,d)
   let setbrique (_,_,_,_) s e p d = (s,e,p,d)
-  (*Méthodes spécifiques à la 2D*)
+  (*Méthodes spécifiques à la 2D ci-dessous*)
   let createdim l = match l with
     |[a;b] -> (a,b)
     |_ -> failwith "dimension non valide en 2D"
@@ -64,8 +84,14 @@ struct
 end
 
 
-(*Fonctions suivantes implémentées pour la 2d seulement*)
+(*************************Fonctions suivantes implémentées pour la 2d seulement**********************************************)
 
+(*Fonction qui renvoie si la brique que l'on souhaite créée chevauche une préexistante
+* Paramètres : brique avec laquelle on souhaite comparer la nouvelle brique, position de la nouvelle brique en x, en y, dimensions de la nouvelle brique, hauteur, largeur
+* Renvoie un booléen : true si les briques se chevauchent, false sinon
+* Préconditions : la brique en entrée n'est pas nulle
+* Postconditions : aucune
+*)
 let chevauchement_brique : Briques2d.brique -> float -> float -> float -> float -> bool = fun brique xnew ynew haut larg ->
    let xpos = Briques2d.getpos (Briques2d.getposition brique) in
    let xdim = Briques2d.getdim (Briques2d.getdimension brique) in
@@ -84,11 +110,23 @@ let chevauchement_brique : Briques2d.brique -> float -> float -> float -> float 
    if plusx || moinsx || plusy || moinsy then false
    else true
 
+(*Fonction qui renvoie une position aléatoire pour une brique
+* Paramètres : bornes en x et en y, hauteur et largeur de la brique
+* Renvoie une position
+* Préconditions : les bornes sont valides, la hauteur et la largeur sont valides
+* Postconditions : aucune
+*)
 let create_position bxmin bxmax bymin bymax h l =
    let x = Random.float (bxmax -. bxmin -. l) +. bxmin in
    let y = Random.float (bymax -. bymin -. h) +. bymin in
    Briques2d.createpos (x::y::[])
 
+(*Fonction qui renvoie une position aléatoire pour une brique qui ne chevauche pas une brique préexistante
+* Paramètres : bornes en x et en y, hauteur et largeur de la brique, liste de briques préexistantes
+* Renvoie une position
+* Préconditions : les bornes sont valides, la hauteur et la largeur sont valides, la liste de briques est non vide
+* Postconditions : aucune
+*)
 let find_position bxmin bxmax bymin bymax h l liste =
    Printf.printf "Je cherche une position\n";
    let x = Random.float (bxmax -. bxmin -. l) +. bxmin in
@@ -108,12 +146,23 @@ let find_position bxmin bxmax bymin bymax h l liste =
 (*On peut reprendre une autre implémentation d'une fenêtre pour indiquer la fenêtre où générer les briques (ie pas toute la fenêtre affichée)
    plutôt que les quatre paramètres mais on n'a pas repris ce module encore je crois*)
 
-
+(* Fonction qui convertit un objet de type position en couple de float
+* Paramètres : position en x, en y
+* Renvoie un couple de float
+* Préconditions : aucune
+* Postconditions : aucune
+*)
 let recreate_floats : Briques2d.p -> float*float = fun p ->
    let x = List.hd (Briques2d.getpos p) in
    let y = List.hd (List.tl (Briques2d.getpos p)) in
    (x,y)
 
+(* Fonction qui insert une liste de briques dans un quadtree
+* Paramètres : liste de briques, quadtree
+* Renvoie un quadtree
+* Préconditions : aucune
+* Postconditions : aucune
+*)
 let rec insert_quadtree : Briques2d.briques -> Briques2d.brique qtree -> Briques2d.brique qtree = fun liste ptitree ->
    match liste with
 
@@ -127,6 +176,12 @@ let rec insert_quadtree : Briques2d.briques -> Briques2d.brique qtree -> Briques
       let newquadtree = Quadtree.insertOnInitializedTree ptitree feuille in
       insert_quadtree q newquadtree
 
+(* Fonction qui génère une liste de briques aléatoires
+* Paramètres : nombre de briques à générer, liste de briques préexistantes, hauteur et largeur maximales et minimales, bornes en x et en y, rapport taille/score, état des briques
+* Renvoie une liste de briques
+* Préconditions : les bornes sont valides, la hauteur et la largeur sont valides, la liste de briques est non vide
+* Postconditions : aucune
+*)
 let rec genrandombrique : int -> Briques2d.briques -> float -> float -> float -> float -> float -> float -> float -> float -> int -> etat -> Briques2d.briques = fun n liste hmax hmin lmax lmin bxmax bxmin bymax bymin rptaillescore etatbrique->
    if n = 0 then [] else
       let hauteur = Random.float (hmax -. hmin) +. hmin in
@@ -140,8 +195,15 @@ let rec genrandombrique : int -> Briques2d.briques -> float -> float -> float ->
          brique::(genrandombrique (n-1) (brique::liste) hmax hmin lmax lmin bxmax bxmin bymax bymin rptaillescore etatbrique)
       with | Not_found -> Printf.printf "je n'ai pas inséré une brique"; genrandombrique 0 liste hmax hmin lmax lmin bxmax bxmin bymax bymin rptaillescore etatbrique
 
+(* Brique dite nulle pour le quadtree*)
 let briquenulle = Briques2d.createbrique 0 Invisible (Briques2d.createpos (0.::0.::[])) (Briques2d.createdim (0.::0.::[]))
 
+(* Fonction qui génère un quadtree de briques aléatoires
+* Paramètres : nombre de briques à générer, hauteur et largeur maximales et minimales, bornes en x et en y, rapport taille/score, état des briques
+* Renvoie un quadtree
+* Préconditions : les bornes sont valides, la hauteur et la largeur sont valides
+* Postconditions : aucune
+*)
 let genbriques n bxmin bxmax bymin bymax hmin hmax lmin lmax rptaillescore etatbrique =
    let quadtree = Quadtree.createAndInitialize (bxmax -. bxmin) (bymax -. bymin) (hmin, lmin) briquenulle in
    let check_param = hmin <= hmax && lmin <= lmax  && n >= 1 && (bxmax -. bxmin) >= lmin && (bymax -. bymin) >= hmin in
@@ -150,13 +212,17 @@ let genbriques n bxmin bxmax bymin bymax hmin hmax lmin lmax rptaillescore etatb
          let liste = genrandombrique n [] hmax hmin lmax lmin bxmin bxmax bymin bymax rptaillescore etatbrique in
          insert_quadtree liste quadtree
 
-
+(*test d'insertion d'une liste de briques dans un quadtree*)
 let%test "Terminaison" =
    let _ = genbriques 100 0. 100. 0. 100. 1. 10. 1. 10. 1 Cassable in
    true
 
-(*envoie celle à enlever et j'enlève du quadtree, mise à Invisible*)
-
+(*Fonction qui retire une brique donnée dans un quadtree
+* Paramètres : quadtree, brique à retirer
+* Renvoie un quadtree
+* Préconditions : aucune
+* Postconditions : aucune
+*)
 let remove_quadtree : Briques2d.brique qtree -> Briques2d.brique -> Briques2d.brique qtree = fun ptitree brique ->
    let qtree = Quadtree.remove ptitree (recreate_floats (Briques2d.getposition brique)) briquenulle in
    qtree
