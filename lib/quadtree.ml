@@ -2,6 +2,7 @@ type vector2 = float*float (*seras implémenté plus en détail plus tard *)
 
 type 'a feuille = {position : vector2; value : 'a}
 
+
 (*une qtree est composée de : 
    un arbre, 
    la taille de la qtree
@@ -88,6 +89,7 @@ let rec insertOnInitializedTree : 'a qtree -> 'a feuille -> 'a qtree =
     | Empty -> failwith "not initialized tree, error"
 
 
+(*fonction deprecated*)
 let rec insert : 'a qtree -> 'a feuille-> 'a qtree =
   fun arbre value ->
 
@@ -174,6 +176,13 @@ let rec isOccupied arbre pos =
         else 
           isOccupied d pos
 
+let rec parcour : 'a qtree -> ('a -> bool) -> 'aList =
+  fun arbre isEmptyA -> 
+    match arbre.tree with 
+      | Empty -> []
+      | Leaf v -> if isEmptyA v.value then [] else [v.value]
+      | Node (a,b,c,d) -> (parcour a isEmptyA)@(parcour b isEmptyA)@(parcour c isEmptyA)@(parcour d isEmptyA)
+
 let colide : 'a qtree -> float*float -> float*float -> float -> 'a qtree * (float*float)* 'a feuille option =
   fun arbre pos vit taille_balle ->
 
@@ -238,8 +247,3 @@ let print arbre =
         print_string "\n";
   in
   print_inter arbre 0
-
-
-
-
-

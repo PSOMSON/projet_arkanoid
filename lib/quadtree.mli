@@ -56,6 +56,7 @@ permet d'afficher l'arbre*)
   val print : 'a qtree -> unit
    
    
+  val parcour : 'a qtree -> ('a -> bool) -> 'aList
 (*note : initialiser l'arbre avec toutes les valeurs avec des valeurs par défauts peu sembler peu 
    optimisé par rapport à rajouter au fur et à mesure les branches à chaque insertion
    en réalité, même si il y avait 1000x1000 briques, l'arbre ne serais que de profondeur log4(1000000) ~= 10 donc 
