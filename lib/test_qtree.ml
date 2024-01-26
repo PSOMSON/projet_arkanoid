@@ -5,11 +5,11 @@ let arbre = createAndInitialize 8. 8. (1.,1.) nulElement ;;
 print arbre;;
 
 (*test d'un ajout*)
-let arbre = insert arbre (2.,2.) "1";;
+let arbre = insertOnInitializedTree arbre (2.,2.) "1";;
 print arbre;;
 
 (*test d'un ajout*)
-let arbre = insert arbre (3.,3.) "2";;
+let arbre = insertOnInitializedTree arbre (3.,3.) "2";;
 print arbre;;
 
 (*test de suppression dans le cas où on supprime pile au bon endroit *)
